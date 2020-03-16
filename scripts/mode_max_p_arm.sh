@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "Enabling Max-P ARM"
+echo " Denver cores: 0"
+echo " ARM-A57 cores: 4, max 2.0 GHz"
+echo " GPU: max 1.12 GHz"
+sudo nvpmodel -m 3
+if [ -f ~/jetson_clocks.sh ]; then
+# For JetPack 3.3 and below
+  sudo ~/jetson_clocks.sh --show
+else
+# For JetPack 4.2 and above
+  sudo jetson_clocks --show
+fi

@@ -1,0 +1,11 @@
+# Build outputs
+test_vilib
+test_vilib.gperf
+test_vilib.gperf.pdf
+build
+# Profiling outputs
+callgrind.*
+remote.nvvp
+local.nvvp
+# Visual Code
+**/.vscode

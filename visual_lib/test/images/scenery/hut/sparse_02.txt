@@ -1,0 +1,21 @@
+# Position
+x=60.26830
+y=-1.15752
+z=17.89730
+
+# Quaternion (Blender camera frame)
+w=0.553599
+x=0.424791
+y=0.436054
+z=0.568276
+
+# Blender camera parameters
+focal_length = 35   mm
+width        = 32.0 mm
+height       = 18.0 mm
+
+# Camera parameters
+fu=822.5 px
+fv=822.5 px
+cu=752/2=376 px
+cv=480/2=240 px

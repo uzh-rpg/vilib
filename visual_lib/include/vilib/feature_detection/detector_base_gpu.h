@@ -26,14 +26,13 @@ public:
                   const bool subpixel_refinement,
                   const bool replace_on_same_level_only);
   virtual ~DetectorBaseGPU(void);
+
   void setStream(cudaStream_t stream);
   cudaStream_t getStream(void);
 
   virtual void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid) = 0;
   virtual void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid,
-                      const bool & use_grid_prior,
                       std::function<void(const std::size_t & /* cell count */,
-                                         const std::size_t & /* new ftr count */,
                                          const float *       /* pos */,
                                          const float *       /* score */,
                                          const int *         /* level */)> callback) = 0;
@@ -62,9 +61,7 @@ protected:
   void processResponse(void);
   void processGrid(void);
   void processGridAndThreshold(float quality_level);
-  void processGridCustom(const bool & use_grid_prior,
-                         std::function<void(const std::size_t & /* cell count */,
-                                            const std::size_t & /* new ftr count */,
+  void processGridCustom(std::function<void(const std::size_t & /* cell count */,
                                             const float *       /* pos */,
                                             const float *       /* score */,
                                             const int *         /* level */)> callback);

@@ -61,8 +61,7 @@ private:
                     const image_pyramid_descriptor_t & pyramid_description,
                     const std::size_t & camera_id);
   // Buffer management (indirection layer)
-  void initBufferIds(const std::size_t & max_ftr_count,
-                     const std::size_t & camera_id);
+  void initBufferIds(const std::size_t & camera_id);
   std::size_t acquireBufferId(const std::size_t & camera_id);
   void releaseBufferId(const std::size_t & id,
                        const std::size_t & camera_id);
@@ -72,6 +71,7 @@ private:
   std::vector<struct GPUBuffer> buffer_;
   std::vector<cudaStream_t> stream_;
   std::vector<std::shared_ptr<DetectorBaseGPU>> detector_;
+  std::size_t max_ftr_count_;
 };
 
 } // namespace vilib

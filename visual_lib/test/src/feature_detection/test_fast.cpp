@@ -20,7 +20,7 @@
 using namespace vilib;
 
 // Frame preprocessing
-#define PYRAMID_LEVELS                       3
+#define PYRAMID_LEVELS                       1
 #define PYRAMID_MIN_LEVEL                    0
 #define PYRAMID_MAX_LEVEL                    PYRAMID_LEVELS
 
@@ -32,8 +32,8 @@ using namespace vilib;
 #define FAST_SCORE                           SUM_OF_ABS_DIFF_ON_ARC
 
 // NMS parameters
-#define HORIZONTAL_BORDER                    8
-#define VERTICAL_BORDER                      8
+#define HORIZONTAL_BORDER                    0
+#define VERTICAL_BORDER                      0
 #define CELL_SIZE_WIDTH                      32
 #define CELL_SIZE_HEIGHT                     32
 

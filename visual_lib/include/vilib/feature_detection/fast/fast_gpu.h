@@ -29,22 +29,21 @@ public:
   ~FASTGPU(void);
   void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid);
   void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid,
-              const bool & use_grid_prior,
               std::function<void(const std::size_t & /* cell count */,
-                                 const std::size_t & /* new ftr count */,
                                  const float *       /* pos */,
                                  const float *       /* score */,
                                  const int *         /* level */)> callback);
 private:
   void detectBase(const std::vector<std::shared_ptr<Subframe>> & pyramid);
 
-  std::size_t det_horizontal_border_;
-  std::size_t det_vertical_border_;
-  // Parameters
+  // Detector parameters
   float threshold_;     // threshold value for creating a histerisis, usually 10.0f
   int min_arc_length_;  // minimum arc length for considering a point being a corner (minimum 9-10)
                         // Note: if the min_arc_length is < 9, then the GPU corner prechecks are skipped, as they are optimized for min. 9
   fast_score score_;
+  // Derived parameters
+  std::size_t det_horizontal_border_;
+  std::size_t det_vertical_border_;
 
   // Temporary buffers
 #if FAST_GPU_USE_LOOKUP_TABLE

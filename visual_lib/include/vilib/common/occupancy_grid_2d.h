@@ -22,11 +22,15 @@ namespace vilib {
 
 class OccupancyGrid2D {
 public:
-  OccupancyGrid2D(int cell_size, int n_cols, int n_rows)
-    : cell_size_(cell_size)
-    , n_cols_(n_cols)
-    , n_rows_(n_rows)
-    , occupancy_(n_cols*n_rows, false) {}
+  OccupancyGrid2D(int cell_size_width,
+                  int cell_size_height,
+                  int n_cols,
+                  int n_rows) :
+    cell_size_width_(cell_size_width),
+    cell_size_height_(cell_size_height),
+    n_cols_(n_cols),
+    n_rows_(n_rows),
+    occupancy_(n_cols*n_rows, false) {}
   ~OccupancyGrid2D() = default;
 
   inline void reset(void) {
@@ -62,39 +66,13 @@ public:
     return std::count(occupancy_.begin(),occupancy_.end(),true);
   }
 
-  inline void copyOccupancyFrom(const OccupancyGrid2D & other) {
-    assert(occupancy_.size() == other.occupancy_.size());
-    occupancy_ = other.occupancy_;
-  }
-
-  template<typename Derived>
-  std::size_t getCellIndex(const Eigen::MatrixBase<Derived>& px) const {
-    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(Derived, 2, 1);
-    return static_cast<std::size_t>((px(1))/cell_size_*n_cols_
-                             + (px(0))/cell_size_);
-  }
-
   inline std::size_t getCellIndex(int x, int y, int scale = 1) const {
-    return static_cast<std::size_t>((scale*y)/cell_size_*n_cols_
-                             + (scale*x)/cell_size_);
+    return static_cast<std::size_t>((scale*y)/cell_size_height_*n_cols_ +
+                                    (scale*x)/cell_size_width_);
   }
 
-  inline void fillWithKeypoints(const Eigen::Matrix<double, 2, Eigen::Dynamic, Eigen::ColMajor> & keypoints,
-                                const std::size_t & feature_num) {
-    /*
-     * Note to future self and others:
-     * we also use feature_num not just .cols(), because the number of columns
-     * can be larger than the actual feature count due to overallocation for
-     * allocation efficiency.
-     */
-    // TODO(cfo): could be implemented using block operations.
-    for(std::size_t i = 0; i < feature_num; ++i) {
-      occupancy_.at(getCellIndex(static_cast<int>(keypoints(0,i)),
-                                 static_cast<int>(keypoints(1,i)), 1)) = true;
-    }
-  }
-
-  const int cell_size_;
+  const int cell_size_width_;
+  const int cell_size_height_;
   const int n_cols_;
   const int n_rows_;
   std::vector<bool> occupancy_;

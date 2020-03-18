@@ -35,7 +35,8 @@ protected:
         vilib::Statistics & rmse_per_frame);
   void visualize_features(
       const std::shared_ptr<vilib::Frame> & frame,
-      cv::Mat & display);
+      cv::Mat & display,
+      bool draw_cells);
 private:
   bool initialized_;
   std::shared_ptr<vilib::DetectorBaseGPU> detector_gpu_;

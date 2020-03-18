@@ -157,7 +157,7 @@ bool TestFeatureTracker::run_benchmark(std::vector<Statistics> & stat_cpu,
 #if VISUALIZE_FEATURE_TRACKING
   cv::Mat color;
   cv::cvtColor(image_, color, cv::COLOR_GRAY2RGB);
-  visualize_features(frame,color);
+  visualize_features(frame,color,true);
 #if SAVE_INSTEAD_DISPLAY
   char frame_filename[20];
   sprintf(frame_filename,"frame_gpu_%04d.png",frame_id);
@@ -240,7 +240,7 @@ bool TestFeatureTracker::run_blender(std::vector<Statistics> & stat_cpu,
     // visualize the features tracked
 #if VISUALIZE_FEATURE_TRACKING
     load_image_to(bf.image_2d_path_.c_str(),cv::IMREAD_COLOR,display);
-    visualize_features(frame,display);
+    visualize_features(frame,display,true);
 #if SAVE_INSTEAD_DISPLAY
     static int frame_id = 1;
     ++frame_id;
@@ -306,9 +306,28 @@ void TestFeatureTracker::calculate_feature_error(
 }
 
 void TestFeatureTracker::visualize_features(const std::shared_ptr<Frame> & frame,
-                                            cv::Mat & display) {
+                                            cv::Mat & display,
+                                            bool draw_cells) {
   static int last_track_id = -1;
   static std::unordered_map<std::size_t,cv::Scalar> track_colors;
+
+  // drawing cells
+  if(draw_cells) {
+    std::size_t n_rows = (display.rows + FEATURE_DETECTOR_CELL_SIZE_HEIGHT-1)/FEATURE_DETECTOR_CELL_SIZE_HEIGHT;
+    std::size_t n_cols = (display.cols + FEATURE_DETECTOR_CELL_SIZE_WIDTH -1)/FEATURE_DETECTOR_CELL_SIZE_WIDTH;
+    for(std::size_t r=0;r<n_rows;++r) {
+        for(std::size_t c=0;c<n_cols;++c) {
+          cv::rectangle(display,
+                        cv::Point(c*FEATURE_DETECTOR_CELL_SIZE_WIDTH,r*FEATURE_DETECTOR_CELL_SIZE_HEIGHT),
+                        cv::Point((c+1)*FEATURE_DETECTOR_CELL_SIZE_WIDTH,(r+1)*FEATURE_DETECTOR_CELL_SIZE_HEIGHT),
+                        cv::Scalar(244,215,66), // B,G,R
+                        1,
+                        8,
+                        0);
+        }
+      }
+  }
+
   // note: id-s start from 0
   for(std::size_t i=0;i<frame->num_features_;++i) {
     const int SHIFT_BITS = 10;

@@ -71,7 +71,7 @@ void FeatureTrackerGPU::track(const std::shared_ptr<FrameBundle> & cur_frames,
     assert(detector_[c] != nullptr && "One must set a GPU feature detector first");
     cur_base_frames.push_back(cur_frames->at(c));
     cur_pyramids.push_back(cur_base_frames[c]->getPyramidDescriptor());
-    cur_base_frames[c]->resizeFeatureStorage(detector_[c]->getGrid().size());
+    cur_base_frames[c]->resizeFeatureStorage(max_ftr_count_);
   }
 
   // 01) Track existing feature tracks (only if there is any)
@@ -183,22 +183,19 @@ void FeatureTrackerGPU::track(const std::shared_ptr<FrameBundle> & cur_frames,
       }
 
       /*
-      * Note to future self:
-      * pre-occupied cells will have a h_score = 0.0
-      */
-      detector_[c]->detect(cur_base_frames[c].get()->pyramid_,(tracked_features_num_[c] != 0),
+       * Note to future self:
+       * pre-occupied cells will be isEmpty(cell_index) = false
+       */
+      detector_[c]->detect(cur_base_frames[c].get()->pyramid_,
                            [&](const std::size_t & grid_cell_cnt,
-                               const std::size_t & ftr_cnt,
                                const float * h_pos,
                                const float * h_score,
                                const int   * h_level) {
-          // Unused
-          (void)ftr_cnt;
           // Do we use every detected feature?
           if(options_.use_best_n_features == -1) {
             // Yes, we are using every feature
             for(std::size_t cell_index=0;cell_index<detector_grid.size();++cell_index) {
-              if(h_score[cell_index] > 0.0f) {
+              if(detector_grid.isEmpty(cell_index) && h_score[cell_index] > 0.0f) {
                 // Add new feature track
                 int track_index = addTrack(cur_base_frames[c],
                                            h_pos[cell_index*2],
@@ -223,7 +220,7 @@ void FeatureTrackerGPU::track(const std::shared_ptr<FrameBundle> & cur_frames,
                 i<detector_grid.size() && detected_features_num_[c] < feature_limit;
                 ++i) {
               std::size_t cell_index = idx[i];
-              if(h_score[cell_index] > 0.0f) {
+              if(detector_grid.isEmpty(cell_index) && h_score[cell_index] > 0.0f) {
                 // Add new feature track
                 int track_index = addTrack(cur_base_frames[c],
                                            h_pos[cell_index*2],
@@ -375,18 +372,25 @@ void FeatureTrackerGPU::setDetectorGPU(std::shared_ptr<DetectorBaseGPU> & detect
    * ...
    * [template] inverse hessian level min_level
    */
-  std::size_t max_ftr_count = detector_[camera_id]->getGrid().size();
+  std::size_t max_detected_ftr_count = 
+    (options_.use_best_n_features==-1)?detector_[camera_id]->getGrid().size():options_.use_best_n_features;
+  /*
+   * Note to future self:
+   * worst case scenario: all tracked features group in 1 cell, and their count drops below
+   * min_tracks_to_detect_new_features, and then we detect (max_detected_ftr_count-1)
+   */
+  max_ftr_count_ = (options_.min_tracks_to_detect_new_features-1) + (max_detected_ftr_count-1);
 
   // 00) Create available indices for buffer bins
   // Note: the elements should be in decreasing order
-  initBufferIds(max_ftr_count,camera_id);
+  initBufferIds(camera_id);
 
   // 01) Allocate indirection layer
-  CUDA_API_CALL(cudaHostAlloc((void**)&buffer_[camera_id].h_indir_data_,(max_ftr_count * sizeof(int)),cudaHostAllocMapped));
+  CUDA_API_CALL(cudaHostAlloc((void**)&buffer_[camera_id].h_indir_data_,(max_ftr_count_ * sizeof(int)),cudaHostAllocMapped));
   CUDA_API_CALL(cudaHostGetDevicePointer((void**)&buffer_[camera_id].d_indir_data_,buffer_[camera_id].h_indir_data_,0));
 
   // 02) Metadata
-  std::size_t metadata_bytes = (max_ftr_count * METADATA_ELEMENT_BYTES);
+  std::size_t metadata_bytes = (max_ftr_count_ * METADATA_ELEMENT_BYTES);
   // allocate mapped memory (as seen during feature alignment, it is going to be
   // faster, as we mainly only access 1 address once and then write out the result
   CUDA_API_CALL(cudaHostAlloc((void**)&buffer_[camera_id].h_metadata_,metadata_bytes,cudaHostAllocMapped));
@@ -394,13 +398,13 @@ void FeatureTrackerGPU::setDetectorGPU(std::shared_ptr<DetectorBaseGPU> & detect
 
   // 03) Patchdata
   std::size_t patchdata_element_bytes = sizeof(FEATURE_TRACKER_REFERENCE_PATCH_TYPE)*pyramid_patch_sizes_.max_area*pyramid_levels_;
-  std::size_t patchdata_bytes = patchdata_element_bytes * max_ftr_count;
+  std::size_t patchdata_bytes = patchdata_element_bytes * max_ftr_count_;
   // device memory, as the CPU doesnt need to access it
   CUDA_API_CALL(cudaMalloc((void**)&buffer_[camera_id].d_patch_data_,patchdata_bytes));
 
   // 04) Hessian data
   std::size_t hessian_element_bytes = sizeof(float)*10*pyramid_levels_;
-  std::size_t hessian_bytes = hessian_element_bytes * max_ftr_count;
+  std::size_t hessian_bytes = hessian_element_bytes * max_ftr_count_;
   // device memory, as the CPU doesnt need to access it
   CUDA_API_CALL(cudaMalloc((void**)&buffer_[camera_id].d_hessian_data_,hessian_bytes));
 
@@ -460,11 +464,10 @@ void FeatureTrackerGPU::freeStorage(const std::size_t & camera_id) {
   }
 }
 
-void FeatureTrackerGPU::initBufferIds(const std::size_t & max_ftr_count,
-                                      const std::size_t & camera_id) {
-  buffer_[camera_id].available_indices_.reserve(max_ftr_count);
-  for(std::size_t bin_id=0;bin_id<max_ftr_count;++bin_id) {
-    buffer_[camera_id].available_indices_.push_back(max_ftr_count-bin_id-1);
+void FeatureTrackerGPU::initBufferIds(const std::size_t & camera_id) {
+  buffer_[camera_id].available_indices_.reserve(max_ftr_count_);
+  for(std::size_t bin_id=0;bin_id<max_ftr_count_;++bin_id) {
+    buffer_[camera_id].available_indices_.push_back(max_ftr_count_-bin_id-1);
   }
 }
 

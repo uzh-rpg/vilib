@@ -28,7 +28,6 @@ using namespace vilib;
 // Available test images
 #define TEST_IMAGE_PERU_640_480                "test/images/peru_640_480.jpg"
 #define TEST_IMAGE_ANGRY_BIRDS_752_480         "test/images/angry_birds_752_480.jpg"
-#define TEST_IMAGE_EUROC_752_480               "test/images/euroc_mh_easy_cam0_752_480.png"
 #define TEST_IMAGE_BLENDER_HUT_752_480         "test/images/scenery/hut/00.png"
 #define TEST_IMAGE_LENNA_512_512               "test/images/lenna.png"
 /*
@@ -74,7 +73,7 @@ int main(int argc, char * argv[]) {
   tests.emplace_back(new TestSubframePool());
   tests.emplace_back(new TestPyramidPool());
   // Feature detection
-  tests.emplace_back(new TestFAST(TEST_IMAGE_LIST_EUROC_752_480,100));
+  tests.emplace_back(new TestFAST(TEST_IMAGE_LIST_EUROC_752_480));
   // High level
   tests.emplace_back(new TestFeatureTracker(TEST_IMAGE_LIST_EUROC_752_480,100));
 

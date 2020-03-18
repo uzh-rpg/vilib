@@ -32,6 +32,8 @@ DetectorBaseGPU::DetectorBaseGPU(const std::size_t image_width,
   subpixel_refinement_(subpixel_refinement),
   replace_on_same_level_only_(replace_on_same_level_only),
   stream_(0) {
+  assert((cell_size_width%32) == 0);
+  assert((cell_size_height%static_cast<std::size_t>(pow(2,max_level-1))) == 0);
   /*
    * Preallocate response buffers (atm 1 for each level)
    *
@@ -214,30 +216,12 @@ void DetectorBaseGPU::processGridAndThreshold(float quality_level) {
   }
 }
 
-void DetectorBaseGPU::processGridCustom(const bool & use_grid_prior,
-                                        std::function<void(const std::size_t &,
-                                                           const std::size_t &,
+void DetectorBaseGPU::processGridCustom(std::function<void(const std::size_t &,
                                                            const float *,
                                                            const float *,
                                                            const int *)> callback) {
   copyGridToHost();
-  std::size_t ftr_count = 0;
-  if(use_grid_prior) {
-    for(std::size_t i=0;i<feature_cell_count_;++i) {
-      if(h_score_[i] > 0.0f) {
-        if(grid_.isEmpty(i)) {
-          ++ftr_count;
-        } else {
-          h_score_[i] = 0.0f;
-        }
-      }
-    }
-  } else {
-    for(std::size_t i=0;i<feature_cell_count_;++i) {
-      ftr_count += (h_score_[i] > 0.0f)?1:0;
-    }
-  }
-  callback(feature_cell_count_,ftr_count,h_pos_,h_score_,h_level_);
+  callback(feature_cell_count_,h_pos_,h_score_,h_level_);
 }
 
 } // namespace vilib

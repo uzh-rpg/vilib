@@ -38,7 +38,6 @@ public:
 
   inline OccupancyGrid2D & getGrid(void) { return grid_; }
   inline const std::vector<struct FeaturePoint> & getPoints(void) const { return keypoints_; }
-
   inline const std::size_t & getCellSizeWidth(void) { return cell_size_width_; }
   inline const std::size_t & getCellSizeHeight(void) { return cell_size_height_; }
   inline const std::size_t & getCellCountHorizontal(void) { return n_cols_; }

@@ -690,13 +690,22 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
                                                   float2 * __restrict__ d_pos,
                                                   float * __restrict__ d_score,
                                                   int * __restrict__ d_level) {
-  // calculate box position in the image
+  // Various identifiers
   const int x = cell_size_width * blockIdx.x + threadIdx.x;
   const int y = cell_size_height * blockIdx.y + threadIdx.y;
+  const int cell_id = gridDim.x * blockIdx.y + blockIdx.x;
+  const int thread_id = threadIdx.x + blockDim.x * threadIdx.y;
+  const int lane_id = thread_id & 0x1F;
+  const int warp_id = thread_id >> 5;
+  const int warp_cnt = (blockDim.x * blockDim.y + 31) >> 5;
+  // Selected maximum response
+  float max_x = static_cast<float>(x);
+  float max_y = 0.f;
+  float max_resp = 0.0f;
+
   if(x < image_width && y < image_height) {
-    const int cell_id = gridDim.x * blockIdx.y + blockIdx.x;
     if(threadIdx.x == 0 && threadIdx.y == 0) {
-      // the very first thread in the threadblock, initializes the cell score & counter
+      // the very first thread in the threadblock, initializes the cell score
       if(level == min_level) {
         d_score[cell_id] = 0.0f;
       }
@@ -716,17 +725,12 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
 
     // Maximum value
     // Location: x,y -> x is always threadIdx.x
-    float max_x = (float)x;
-    float max_y = 0.f;
     int max_y_tmp = 0;
-
-    float max_resp = 0.0f;
-    float scale = (float)(1<<level);
 
     // border remains the same irrespective of pyramid level
     int image_width_m_border = image_width-horizontal_border;
     int image_height_m_border = image_height-vertical_border;
-    if(threadIdx.x < cell_size_width && x >= horizontal_border && x < image_width_m_border) {
+    if(x >= horizontal_border && x < image_width_m_border) {
       // we want as few idle threads as possible, hence we shift them according to y
       // note: we shift down all lines within the block
       int cell_top_to_border = vertical_border-(cell_size_height*blockIdx.y);
@@ -795,7 +799,7 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
       }
     }
     // only do the conversion once
-    max_y = (float)max_y_tmp;
+    max_y = static_cast<float>(max_y_tmp);
 
     // now reduce the maximum location to thread 0 within each warp
     #pragma unroll
@@ -821,7 +825,7 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
       float max_y_adj = max_y + 0.5f;
       float sub_x = max_x_adj*max_resp;
       float sub_y = max_y_adj*max_resp;
-      const float * d_response_ptr = d_response + ((int)max_y)*response_pitch_elements + (int)max_x;
+      const float * d_response_ptr = d_response + static_cast<int>(max_y)*response_pitch_elements + static_cast<int>(max_x);
 
 #if (USE_PRECALCULATED_INDICES == 0)
       int x=0;
@@ -839,8 +843,8 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
         nms_offset_pos(i,x_offset,y_offset);
 #else
         int j = y*response_pitch_elements + x;
-        x_offset = (float)x;
-        y_offset = (float)y;
+        x_offset = static_cast<float>(x);
+        y_offset = static_cast<float>(y);
 #endif /* USE_PRECALCULATED_INDICES */
 
         float score_neighbour=d_response_ptr[j];
@@ -866,54 +870,52 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
       max_x = sub_x / weight_sum;
       max_y = sub_y / weight_sum;
     }
+  }
 
-    // now each warp's lane 0 has the maximum value of its cell
-    const int thread_id = threadIdx.x + blockDim.x * threadIdx.y;
-    const int lane_id = thread_id & 0x1F;
-    // reduce in shared memory
-    // each warp's lane 0 writes to shm
-    // resp, x, y, (level - not used)
-    const int warp_id = thread_id >> 5;
-    const int warp_cnt = blockDim.x * blockDim.y >> 5;
-    extern __shared__ float s[];
-    float * s_data = s + (warp_id << 2);
-    if(lane_id == 0) {
-      s_data[0] = max_resp;
-      s_data[1] = max_x;
-      s_data[2] = max_y;
-    }
-    __syncthreads();
-    // threadId x & y 0 reduces the warp results
-    if(threadIdx.x == 0 && threadIdx.y == 0) {
-      s_data = s + 4; // skip self results
-      for(int i=1;i<warp_cnt;i++,s_data += 4) {
-        float max_resp_s = s_data[0];
-        float max_x_s    = s_data[1];
-        float max_y_s    = s_data[2];
-        if(max_resp_s > max_resp) {
-          max_resp = max_resp_s;
-          max_x = max_x_s;
-          max_y = max_y_s;
-        }
+  // now each warp's lane 0 has the maximum value of its cell
+  // reduce in shared memory
+  // each warp's lane 0 writes to shm
+  // resp, x, y, (level - not used)
+  extern __shared__ float s[];
+  float * s_data = s + (warp_id << 2);
+  float scale = static_cast<float>(1<<level);
+
+  if(lane_id == 0) {
+    s_data[0] = max_resp;
+    s_data[1] = max_x;
+    s_data[2] = max_y;
+  }
+  __syncthreads();
+  // threadId x & y 0 reduces the warp results
+  if(threadIdx.x == 0 && threadIdx.y == 0) {
+    s_data = s + 4; // skip self results
+    for(int i=1;i<warp_cnt;i++,s_data += 4) {
+      float max_resp_s = s_data[0];
+      float max_x_s    = s_data[1];
+      float max_y_s    = s_data[2];
+      if(max_resp_s > max_resp) {
+        max_resp = max_resp_s;
+        max_x = max_x_s;
+        max_y = max_y_s;
       }
+    }
 
-      if(replace_on_same_level_only) {
-        // only replace points if the level is the same
-        // since we only come here once per level, only replace 0-s
-        if(d_score[cell_id] == 0.0f && 0.0f < max_resp) {
-          d_score[cell_id] = max_resp;
-          d_pos[cell_id].x = max_x * scale;
-          d_pos[cell_id].y = max_y * scale;
-          d_level[cell_id] = level;
-        }
-      } else {
-        // always replace points in the cell if the current response is higher
-        if(d_score[cell_id] < max_resp) {
-          d_score[cell_id] = max_resp;
-          d_pos[cell_id].x = max_x * scale;
-          d_pos[cell_id].y = max_y * scale;
-          d_level[cell_id] = level;
-        }
+    if(replace_on_same_level_only) {
+      // only replace points if the level is the same
+      // since we only come here once per level, only replace 0-s
+      if(d_score[cell_id] == 0.0f && 0.0f < max_resp) {
+        d_score[cell_id] = max_resp;
+        d_pos[cell_id].x = max_x * scale;
+        d_pos[cell_id].y = max_y * scale;
+        d_level[cell_id] = level;
+      }
+    } else {
+      // always replace points in the cell if the current response is higher
+      if(d_score[cell_id] < max_resp) {
+        d_score[cell_id] = max_resp;
+        d_pos[cell_id].x = max_x * scale;
+        d_pos[cell_id].y = max_y * scale;
+        d_level[cell_id] = level;
       }
     }
   }
@@ -938,27 +940,18 @@ __host__ void detector_base_gpu_grid_nms(const int image_level,
                                          float * d_score,
                                          int * d_level,
                                          cudaStream_t stream) {
-  assert(image_level < 3);
-  /*
-    * Note to future self:
-    * For each cell we start:
-    * 32 x N threads
-    * We store in shared memory:
-    * score, x, y, (level)
-    */
   const int cell_size_width_level  = (cell_size_width  >> image_level);
   const int cell_size_height_level = (cell_size_height >> image_level);
-  int max_warp_count = cell_size_width_level*cell_size_height_level / 32;
-  int planned_warp_count = 4;
-  int launched_warp_count = min(planned_warp_count,max_warp_count);
+  int target_threads_per_block = 128;
   kernel_params_t p;
-  p.threads_per_block.x = (32 >> image_level);
-  p.threads_per_block.y = (launched_warp_count << image_level);
+  p.threads_per_block.x = cell_size_width_level;
+  p.threads_per_block.y = max(1,min(target_threads_per_block/cell_size_width_level,cell_size_height_level));
   p.threads_per_block.z = 1;
   p.blocks_per_grid.x = horizontal_cell_num;
   p.blocks_per_grid.y = vertical_cell_num;
   p.blocks_per_grid.z = 1;
-  // for every warp, we need 4 bytes
+  // shared memory allocation
+  int launched_warp_count = (p.threads_per_block.x*p.threads_per_block.y*p.threads_per_block.z+32-1)/32;
   std::size_t shm_mem_size = launched_warp_count*4*sizeof(float);
 
   if(replace_on_same_level_only) {

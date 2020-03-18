@@ -41,11 +41,11 @@ FASTGPU::FASTGPU(const std::size_t image_width,
                   std::max(static_cast<std::size_t>(MINIMUM_BORDER),vertical_border),
                   false, /* subpixel refinement */
                   false /* only replace on the same level */),
-  det_horizontal_border_(std::max(MINIMUM_BORDER,static_cast<int>(horizontal_border) - static_cast<int>(DETECTOR_BASE_NMS_SIZE/2))),
-  det_vertical_border_(std::max(MINIMUM_BORDER,static_cast<int>(vertical_border) - static_cast<int>(DETECTOR_BASE_NMS_SIZE/2))),
   threshold_(threshold),
   min_arc_length_(min_arc_length),
-  score_(score) {
+  score_(score),
+  det_horizontal_border_(std::max(MINIMUM_BORDER,static_cast<int>(horizontal_border) - static_cast<int>(DETECTOR_BASE_NMS_SIZE/2))),
+  det_vertical_border_(std::max(MINIMUM_BORDER,static_cast<int>(vertical_border) - static_cast<int>(DETECTOR_BASE_NMS_SIZE/2))) {
   assert(min_arc_length >= 9 && min_arc_length <= 12);
   // LUT for corner response
 #if FAST_GPU_USE_LOOKUP_TABLE
@@ -108,14 +108,12 @@ void FASTGPU::detect(const std::vector<std::shared_ptr<Subframe>> & pyramid) {
 }
 
 void FASTGPU::detect(const std::vector<std::shared_ptr<Subframe>> & pyramid,
-                     const bool & use_grid_prior,
                      std::function<void(const std::size_t &  /* cell count */,
-                                        const std::size_t & /* new ftr count */,
                                         const float *  /* pos */,
                                         const float *  /* score */,
                                         const int *  /* level */)> callback) {
   detectBase(pyramid);
-  processGridCustom(use_grid_prior,callback);
+  processGridCustom(callback);
 }
 
 } // namespace vilib

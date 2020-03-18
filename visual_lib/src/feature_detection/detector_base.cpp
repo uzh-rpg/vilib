@@ -27,10 +27,11 @@ DetectorBase::DetectorBase(const std::size_t image_width,
   max_level_(max_level),
   horizontal_border_(horizontal_border),
   vertical_border_(vertical_border),
-  // TODO: should be merged into grid, and grid should be extended with assymetric grid cells
+  // TODO: should be merged into grid
   grid_(cell_size_width,
-        ((image_width+cell_size_width-1)/cell_size_width),
-        ((image_height+cell_size_height-1)/cell_size_height)) {
+        cell_size_height,
+        n_cols_,
+        n_rows_) {
   // populate keypoints_ grid cell for display!
   keypoints_.resize(n_cols_ * n_rows_, FeaturePoint(0.0,0.0,0.0,-1));
 }

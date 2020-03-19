@@ -96,7 +96,21 @@ make clean
 # Compile the shared library
 make solib -j4
 ```
-2. Install the library
+2. Compile the test suite (optional)
+```bash
+# We prepared a test suite for the library
+# that verifies the provided functionalities
+make test -j4
+# Download the dataset: some tests require a dataset
+# We used the Machine Hall 01 from ETH Zürich.
+cd test/images
+# Follow the instructions
+./create_feature_detector_evaluation_data.sh
+# Once the dataset has been acquired successfully,
+# simply run the test suite:
+./test_vilib
+```
+3. Install the library
 ```bash
 # Default installation paths :
 # Header files : /usr/local/vilib/include
@@ -106,7 +120,7 @@ sudo make uninstall
 # Install the last compiled version
 sudo make install
 ```
-3. Accomodate your target application’s Makefile to locate the library
+4. Accomodate your target application’s Makefile to locate the library
 ```bash
 # i ) Compilation stage
 CXX_INCLUDE_DIRS += -I<path to the include directory of the visual lib>

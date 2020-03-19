@@ -187,9 +187,6 @@ install:
 uninstall:
 	rm -rf ${LIBRARY_INSTALLATION_PATH}
 
-${STATIC_LIBRARY_NAME}: ${OBJECTS}
-	${AR} ${AR_FLAGS} ${BUILD_DIR}/$@ ${OBJECTS}
-
 ${SHARED_LIBRARY_NAME}: ${OBJECTS}
 	${CXX} ${CXX_LD_FLAGS} -shared ${CXX_LD_DIRS} $^ ${CXX_LD_LIBRARIES} -o ${BUILD_DIR}/$@
 

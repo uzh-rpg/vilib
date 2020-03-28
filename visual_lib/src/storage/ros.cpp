@@ -2,13 +2,21 @@
  * Functions for handling ROS types
  * ros.cpp
  *
- * Note to future self:
- * Consult the following for the inner structure of the sensor_msgs/Image
- * http://docs.ros.org/melodic/api/sensor_msgs/html/msg/Image.html
+ * Copyright (C) 2019-2020 Balazs Nagy,
+ * Robotics and Perception Group, University of Zurich
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * sensor_msgs::ImageConstPtr/width : number of columns in pixel units
- * sensor_msgs::ImageConstPtr/height: number of rows in pixel units
- * sensor_msgs::ImageConstPtr/step  : full row length in byte units
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifdef ROS_SUPPORT

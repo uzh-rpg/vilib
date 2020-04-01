@@ -22,8 +22,7 @@
 #include <assert.h>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
-#include "visual_lib/preprocess/pyramid.h"
-#include "visual_lib/simd_common.h"
+#include "vilib/preprocess/pyramid.h"
 //CPU Architecture specific includes
 #if defined(__SSE2__)
 #include <emmintrin.h>

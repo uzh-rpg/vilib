@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
   tests.emplace_back(new TestSubframePool());
   tests.emplace_back(new TestPyramidPool());
   // Feature detection
-  tests.emplace_back(new TestFAST(TEST_IMAGE_LIST_EUROC_752_480));
+  tests.emplace_back(new TestFAST(TEST_IMAGE_LIST_EUROC_752_480,100));
   // High level
   tests.emplace_back(new TestFeatureTracker(TEST_IMAGE_LIST_EUROC_752_480,100));
 

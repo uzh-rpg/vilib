@@ -1,5 +1,9 @@
 # CUDA Visual Library
 
+## Publication
+Please find the paper acompanying this repository on arXiv:
+> Balazs Nagy, Philipp Foehn, Davide Scaramuzza, [Faster than FAST: GPU-Accelerated Frontend for High-Speed VIO](https://arxiv.org/abs/2003.13493), arXiv 2003.13493, March 2020
+
 ## Organization
 
 This library focuses on the front-end of VIO pipelines. We tried to organize

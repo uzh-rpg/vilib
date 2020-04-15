@@ -42,8 +42,6 @@ void detector_base_gpu_grid_nms(const int image_level,
                                 const int cell_size_height,
                                 const int horizontal_cell_num,
                                 const int vertical_cell_num,
-                                const bool subpixel_refinement,
-                                const bool replace_on_same_level_only,
                                 /* pitch in bytes/sizeof(float) */
                                 const int response_pitch_elements,
                                 const float * d_response,

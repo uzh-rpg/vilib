@@ -24,21 +24,18 @@
 #include "vilib/cuda_common.h"
 
 namespace vilib {
-#define CELL_WARP_MASK                            0xFFFFFFFF
+
+  // Warp preliminaries
+#define WARP_MASK                            0xFFFFFFFF
 // Use precalculated indices
 /*
  * Note to future self: this is just a coding convenience,
  * because the loop is unrolled, there's no speed impact
  */
-#define USE_PRECALCULATED_INDICES                 1
+#define USE_PRECALCULATED_INDICES            1
 
 #if USE_PRECALCULATED_INDICES
 __inline__ __device__ void nms_offset_pos(const int & i, float & x_offset, float & y_offset) {
-  /*
-   * Note to future self and others:
-   * Don't worry about these if-s, because this function is only called in unrolled
-   * environments.
-   */
   /*
    * 3x3 (n=1):
    * 7 0 1
@@ -406,11 +403,6 @@ __inline__ __device__ void nms_offset_pos(const int & i, float & x_offset, float
 __inline__ __device__ int nms_offset(const int & i, const int & pitch) {
   int offs=0;
   /*
-   * Note to future self and others:
-   * Don't worry about these if-s, because this function is only called in unrolled
-   * environments.
-   */
-  /*
    * 3x3 (n=1):
    * 7 0 1
    * 6 x 2
@@ -692,7 +684,6 @@ __host__ void detector_base_gpu_regular_nms(const int image_width,
   CUDA_KERNEL_CHECK();
 }
 
-template<bool subpixel_refinement,bool replace_on_same_level_only>
 __global__ void detector_base_gpu_grid_nms_kernel(const int level,
                                                   const int min_level,
                                                   const int image_width,
@@ -814,77 +805,20 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
         }
       }
     }
-    // only do the conversion once
+    // Perform conversion
     max_y = static_cast<float>(max_y_tmp);
+  }
 
-    // now reduce the maximum location to thread 0 within each warp
-    #pragma unroll
-    for (int offset = warpSize/2; offset > 0; offset /= 2) {
-      float max_resp_new = __shfl_down_sync(CELL_WARP_MASK, max_resp, offset);
-      float max_x_new    = __shfl_down_sync(CELL_WARP_MASK, max_x, offset);
-      float max_y_new    = __shfl_down_sync(CELL_WARP_MASK, max_y, offset);
-      if(max_resp_new > max_resp) {
-        max_resp = max_resp_new;
-        max_x = max_x_new;
-        max_y = max_y_new;
-      }
-    }
-
-    /*
-     * Go through the neigborhood again, and refine the position according to the
-     * neighbouring values (we weigh the pixel positions by the score calculated for
-     * that given position)
-     */
-    if(subpixel_refinement) {
-      float weight_sum = max_resp;
-      float max_x_adj = max_x + 0.5f;
-      float max_y_adj = max_y + 0.5f;
-      float sub_x = max_x_adj*max_resp;
-      float sub_y = max_y_adj*max_resp;
-      const float * d_response_ptr = d_response + static_cast<int>(max_y)*response_pitch_elements + static_cast<int>(max_x);
-
-#if (USE_PRECALCULATED_INDICES == 0)
-      int x=0;
-      int y=-1;
-      int dx=1;
-      int dy=0;
-      bool next=false;
-#endif /* USE_PRECALCULATED_INDICES */
-
-      #pragma unroll
-      for(int i=0;i<(DETECTOR_BASE_NMS_SIZE*DETECTOR_BASE_NMS_SIZE-1);++i) {
-        float x_offset, y_offset;
-#if USE_PRECALCULATED_INDICES
-        int j = nms_offset(i,response_pitch_elements);
-        nms_offset_pos(i,x_offset,y_offset);
-#else
-        int j = y*response_pitch_elements + x;
-        x_offset = static_cast<float>(x);
-        y_offset = static_cast<float>(y);
-#endif /* USE_PRECALCULATED_INDICES */
-
-        float score_neighbour=d_response_ptr[j];
-        sub_x += (max_x_adj + x_offset)*score_neighbour;
-        sub_y += (max_y_adj + y_offset)*score_neighbour;
-        weight_sum += score_neighbour;
-
-#if (USE_PRECALCULATED_INDICES == 0)
-        if((x>0 && x==y) || (x==-y) || next) {
-          // if we reached the limit, change how we proceed
-          // essentially we change the direction
-          int tmp = dx;
-          dx = -dy;
-          dy = tmp;
-          next = false;
-        } else if(x<0 && x==y) {
-          next = true;
-        }
-        x = x+dx;
-        y = y+dy;
-#endif /* USE_PRECALCULATED_INDICES */
-      }
-      max_x = sub_x / weight_sum;
-      max_y = sub_y / weight_sum;
+  // Reduce the maximum location to thread 0 within each warp
+  #pragma unroll
+  for (int offset = warpSize/2; offset > 0; offset /= 2) {
+    float max_resp_new = __shfl_down_sync(WARP_MASK, max_resp, offset);
+    float max_x_new    = __shfl_down_sync(WARP_MASK, max_x, offset);
+    float max_y_new    = __shfl_down_sync(WARP_MASK, max_y, offset);
+    if(max_resp_new > max_resp) {
+      max_resp = max_resp_new;
+      max_x = max_x_new;
+      max_y = max_y_new;
     }
   }
 
@@ -916,23 +850,11 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
       }
     }
 
-    if(replace_on_same_level_only) {
-      // only replace points if the level is the same
-      // since we only come here once per level, only replace 0-s
-      if(d_score[cell_id] == 0.0f && 0.0f < max_resp) {
-        d_score[cell_id] = max_resp;
-        d_pos[cell_id].x = max_x * scale;
-        d_pos[cell_id].y = max_y * scale;
-        d_level[cell_id] = level;
-      }
-    } else {
-      // always replace points in the cell if the current response is higher
-      if(d_score[cell_id] < max_resp) {
-        d_score[cell_id] = max_resp;
-        d_pos[cell_id].x = max_x * scale;
-        d_pos[cell_id].y = max_y * scale;
-        d_level[cell_id] = level;
-      }
+    if(d_score[cell_id] < max_resp) {
+      d_score[cell_id] = max_resp;
+      d_pos[cell_id].x = max_x * scale;
+      d_pos[cell_id].y = max_y * scale;
+      d_level[cell_id] = level;
     }
   }
 }
@@ -947,8 +869,6 @@ __host__ void detector_base_gpu_grid_nms(const int image_level,
                                          const int cell_size_height,
                                          const int horizontal_cell_num,
                                          const int vertical_cell_num,
-                                         const bool subpixel_refinement,
-                                         const bool replace_on_same_level_only,
                                          /* pitch in bytes/sizeof(float) */
                                          const int response_pitch_elements,
                                          const float * d_response,
@@ -970,71 +890,20 @@ __host__ void detector_base_gpu_grid_nms(const int image_level,
   int launched_warp_count = (p.threads_per_block.x*p.threads_per_block.y*p.threads_per_block.z+32-1)/32;
   std::size_t shm_mem_size = launched_warp_count*4*sizeof(float);
 
-  if(replace_on_same_level_only) {
-    if(subpixel_refinement) {
-      detector_base_gpu_grid_nms_kernel<true,true><<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
-                                                    image_level,
-                                                    min_image_level,
-                                                    image_width,
-                                                    image_height,
-                                                    horizontal_border,
-                                                    vertical_border,
-                                                    cell_size_width_level,
-                                                    cell_size_height_level,
-                                                    response_pitch_elements,
-                                                    d_response,
-                                                    d_pos,
-                                                    d_score,
-                                                    d_level);
-    } else {
-      detector_base_gpu_grid_nms_kernel<false,true><<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
-                                                    image_level,
-                                                    min_image_level,
-                                                    image_width,
-                                                    image_height,
-                                                    horizontal_border,
-                                                    vertical_border,
-                                                    cell_size_width_level,
-                                                    cell_size_height_level,
-                                                    response_pitch_elements,
-                                                    d_response,
-                                                    d_pos,
-                                                    d_score,
-                                                    d_level);
-    }
-  } else {
-    if(subpixel_refinement) {
-      detector_base_gpu_grid_nms_kernel<true,false><<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
-                                                    image_level,
-                                                    min_image_level,
-                                                    image_width,
-                                                    image_height,
-                                                    horizontal_border,
-                                                    vertical_border,
-                                                    cell_size_width_level,
-                                                    cell_size_height_level,
-                                                    response_pitch_elements,
-                                                    d_response,
-                                                    d_pos,
-                                                    d_score,
-                                                    d_level);
-    } else {
-      detector_base_gpu_grid_nms_kernel<false,false><<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
-                                                    image_level,
-                                                    min_image_level,
-                                                    image_width,
-                                                    image_height,
-                                                    horizontal_border,
-                                                    vertical_border,
-                                                    cell_size_width_level,
-                                                    cell_size_height_level,
-                                                    response_pitch_elements,
-                                                    d_response,
-                                                    d_pos,
-                                                    d_score,
-                                                    d_level);
-    }
-  }
+  detector_base_gpu_grid_nms_kernel<<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
+                                                image_level,
+                                                min_image_level,
+                                                image_width,
+                                                image_height,
+                                                horizontal_border,
+                                                vertical_border,
+                                                cell_size_width_level,
+                                                cell_size_height_level,
+                                                response_pitch_elements,
+                                                d_response,
+                                                d_pos,
+                                                d_score,
+                                                d_level);
   CUDA_KERNEL_CHECK();
 }
 

@@ -34,9 +34,7 @@ DetectorBaseGPU::DetectorBaseGPU(const std::size_t image_width,
                                  const std::size_t min_level,
                                  const std::size_t max_level,
                                  const std::size_t horizontal_border,
-                                 const std::size_t vertical_border,
-                                 const bool subpixel_refinement,
-                                 const bool replace_on_same_level_only) :
+                                 const std::size_t vertical_border) :
   DetectorBase(image_width,
                image_height,
                cell_size_width,
@@ -45,8 +43,6 @@ DetectorBaseGPU::DetectorBaseGPU(const std::size_t image_width,
                max_level,
                horizontal_border,
                vertical_border),
-  subpixel_refinement_(subpixel_refinement),
-  replace_on_same_level_only_(replace_on_same_level_only),
   stream_(0) {
   assert((cell_size_width%32) == 0);
   assert((cell_size_height%static_cast<std::size_t>(pow(2,max_level-1))) == 0);
@@ -154,8 +150,6 @@ void DetectorBaseGPU::processResponse(void) {
                                cell_size_height_,
                                n_cols_,
                                n_rows_,
-                               subpixel_refinement_,
-                               replace_on_same_level_only_,
                                /* wpitch in bytes/sizeof(float) */
                                responses_[l_resp].pitch_elements_,
                                responses_[l_resp].data_,

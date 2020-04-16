@@ -38,9 +38,7 @@ public:
                   const std::size_t min_level,
                   const std::size_t max_level,
                   const std::size_t horizontal_border,
-                  const std::size_t vertical_border,
-                  const bool subpixel_refinement,
-                  const bool replace_on_same_level_only);
+                  const std::size_t vertical_border);
   virtual ~DetectorBaseGPU(void);
 
   void setStream(cudaStream_t stream);
@@ -97,8 +95,6 @@ protected:
   float2 * d_pos_;
   int * d_level_;
   float * d_score_;
-  bool subpixel_refinement_;
-  bool replace_on_same_level_only_;
   // Stream to use
   cudaStream_t stream_;
 };

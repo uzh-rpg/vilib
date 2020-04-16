@@ -26,7 +26,7 @@
 namespace vilib {
 namespace feature_tracker_cuda_tools {
 
-  // Warp preliminaries
+// Warp preliminaries
 #define WARP_SIZE                       32
 #define WARP_MASK                       0xFFFFFFFF
 // Precalculating feature patches
@@ -124,12 +124,13 @@ __device__ __inline__ void perform_lk(const float & min_update_squared,
         Jres[2] += res*(*it_ref);
       }
     }
+
     // Reduce it to all lanes
     #pragma unroll
     for (int offset = WARP_SIZE/2; offset > 0; offset /= 2) {
       #pragma unroll
       for(int i=0;i<4;++i) {
-        Jres[i] += __shfl_xor_sync(0xFFFFFFFF, Jres[i], offset);
+        Jres[i] += __shfl_xor_sync(WARP_MASK, Jres[i], offset);
       }
     }
 
@@ -556,6 +557,7 @@ __device__ __inline__ void calc_hessian(const int & img_width,
       H[2] += J[1]*J[1];
     }
   }
+
   // Reduce it down to lane 0
   #pragma unroll
   for(int offset = WARP_SIZE/2; offset > 0; offset /= 2) {

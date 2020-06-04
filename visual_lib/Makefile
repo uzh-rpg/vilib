@@ -198,7 +198,7 @@ install:
 	mkdir -p ${LIBRARY_INSTALLATION_PATH}/lib
 	mkdir -p ${LIBRARY_INSTALLATION_PATH}/include
 	cp ${BUILD_DIR}/${SHARED_LIBRARY_NAME} ${LIBRARY_INSTALLATION_PATH}/lib/.
-	cp -r include/vilib ${HEADERS_INSTALLATION_PATH}/.
+	cp -r include/vilib ${LIBRARY_INSTALLATION_PATH}/include/.
 
 uninstall:
 	rm -rf ${LIBRARY_INSTALLATION_PATH}

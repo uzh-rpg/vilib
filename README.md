@@ -195,12 +195,12 @@ sudo apt-get install libjpeg-dev libpng-dev libtiff5-dev libdc1394-22-dev libeig
 # OpenCV
 git clone https://github.com/opencv/opencv.git
 cd opencv
-git checkout 4.2.0
+git checkout 4.3.0
 cd ..
 # OpenCV-Contrib
 git clone https://github.com/opencv/opencv_contrib.git
 cd opencv_contrib
-git checkout 4.2.0
+git checkout 4.3.0
 cd ..
 
 #
@@ -208,11 +208,8 @@ cd ..
 mkdir -p opencv/build
 cd opencv/build
 # Configure the build parameters
-#
-# Note to future self on CUDA_GENERATION:
-# https://github.com/opencv/opencv/blob/master/cmake/OpenCVDetectCUDA.cmake#L79
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
-      -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.2 \
+      -D CMAKE_INSTALL_PREFIX=/usr/local/opencv-4.3 \
       -D INSTALL_C_EXAMPLES=OFF \
       -D INSTALL_PYTHON_EXAMPLES=OFF \
       -D BUILD_EXAMPLES=OFF \
@@ -222,13 +219,8 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
       -D WITH_V4L=ON \
       -D WITH_QT=OFF \
       -D WITH_OPENGL=ON \
-      -D WITH_OPENCL=ON \
-      -D WITH_CUDA=ON \
-      -D CUDA_GENERATION=Auto \
-      -D WITH_CUBLAS=ON \
-      -D WITH_CUFFT=ON \
-      -D WITH_NVCUVID=OFF \
-      -D CUDA_FAST_MATH=1 \
+      -D WITH_OPENCL=OFF \
+      -D WITH_CUDA=OFF \
       -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ..
 # Start building
 # - use your number of CPU cores
@@ -236,7 +228,7 @@ make -j4
 # ..and "install" OpenCV
 sudo make install
 # create symlink (in order to support multiple installations)
-sudo ln -s /usr/local/opencv-4.2 /usr/local/opencv
+sudo ln -s /usr/local/opencv-4.3 /usr/local/opencv
 ```
 
 More information about the library is available [here](https://opencv.org/).

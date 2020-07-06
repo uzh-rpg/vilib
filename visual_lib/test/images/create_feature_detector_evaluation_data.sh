@@ -47,8 +47,6 @@ import sys
 import os
 import cv2
 from cv_bridge import CvBridge
-from PIL import Image
-import numpy as np
 
 parser = argparse.ArgumentParser(description='Extract left and right images from captured bags. The script upon request concatenates the left and right images for easier checking.')
 parser.add_argument('bag', metavar='bag', help='ROS bag file to be analyzed')

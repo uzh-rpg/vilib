@@ -78,7 +78,10 @@ bool TestFeatureTracker::run(void) {
     feature_tracker_options.affine_est_offset = false;
 
     // Instantiate detectors (default is the Blender dataset)
-    load_image_dimensions(752,480);
+    if(!load_image_dimensions(752,480)) {
+      // Could not acquire the initialization parameters
+      return false;
+    }
     // Create feature detector & tracker for the GPU
     detector_gpu_.reset(new FASTGPU(image_width_,
                                     image_height_,
@@ -289,7 +292,7 @@ void TestFeatureTracker::calculate_feature_error(
                             Eigen::Vector4d,
                             std::hash<std::size_t>,
                             std::equal_to<std::size_t>,
-                            Eigen::aligned_allocator<Eigen::Vector4d>> track_origin_point;
+                            Eigen::aligned_allocator<std::pair<const std::size_t,Eigen::Vector4d>>> track_origin_point;
   double tracked_points_rmse = 0.0;
   std::size_t tracked_points = 0;
   for(std::size_t i=0;i<frame->num_features_;++i) {

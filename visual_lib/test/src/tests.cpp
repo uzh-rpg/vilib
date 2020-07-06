@@ -22,9 +22,6 @@
 #include <iostream>
 #include <vector>
 #include <memory>
-#ifdef CUSTOM_OPENCV_SUPPORT
-#include <opencv2/cudev/common.hpp>
-#endif /* CUSTOM_OPENCV_SUPPORT */
 #include "vilib/cuda_common.h"
 #include "test/common.h"
 #include "test/test_base.h"
@@ -59,19 +56,6 @@ using namespace vilib;
 int main(int argc, char * argv[]) {
   // Save arguments
   init_arguments(argc,argv);
-
-  // Initializations
-#ifdef CUSTOM_OPENCV_SUPPORT
-  /*
-   * Placing cv::Mats in page-locked memory buffers
-   * The CUDA memcpy-s became super-fast, but operations on the matrices on the CPU got somewhat slower:
-   * - the copyies got fast: because we dont need to copy the area to a
-   *   pinned location first, hence we save the first step of a regular H2D,D2H transfer
-   * - operations on the CPU got slower, because the pinned-memory content is NOT
-   *   cached on the CPU
-   */
-  cv::Mat::setDefaultAllocator(cv::cuda::HostMem::getAllocator(cv::cuda::HostMem::AllocType::PAGE_LOCKED));
-#endif /* CUSTOM_OPENCV_SUPPORT */
 
   /*
    * Note to future self:

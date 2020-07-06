@@ -86,7 +86,10 @@ bool TestFAST::run(void) {
   stat_gpu.emplace_back("[1]","FAST feature count");
 
   // Create detectors
-  load_image_dimensions();
+  if(!load_image_dimensions()) {
+    // Could not acquire the initialization parameters
+    return false;
+  }
   // CPU
 #if ENABLE_CPU_VERSION
   detector_cpu_.reset(new rosten::FASTCPU<false>(

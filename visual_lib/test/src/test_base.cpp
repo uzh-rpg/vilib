@@ -21,6 +21,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <opencv2/highgui.hpp>
 #include "test/test_base.h"
 #include "test/common.h"
@@ -67,8 +69,12 @@ void TestBase::load_image(int load_flags, bool display_image, bool display_info)
   }
 }
 
-void TestBase::load_image_dimensions(const std::size_t & width_default,
+bool TestBase::load_image_dimensions(const std::size_t & width_default,
                                      const std::size_t & height_default) {
+  if(!verify_path(file_path_)) {
+    std::cout << " The specified file does not exist (" << file_path_ << ")" << std::endl;
+    return false;
+  }
   if(is_list_) {
     // this is a list file, read out the resolution from the first 2 lines
     std::ifstream list_file(file_path_);
@@ -98,6 +104,7 @@ void TestBase::load_image_dimensions(const std::size_t & width_default,
     image_width_ = width_default;
     image_height_ = height_default;
   }
+  return true;
 }
 
 void TestBase::load_image_to(const char * image_path,
@@ -221,6 +228,11 @@ bool TestBase::is_list_file(const char * file_path) {
     }
   }
   return false;
+}
+
+bool TestBase::verify_path(const char * path) {
+  struct stat info;
+  return (stat(path,&info) == 0);
 }
 
 bool TestBase::run_benchmark_suite(std::vector<Statistics> & stat_cpu,

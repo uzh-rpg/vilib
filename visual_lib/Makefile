@@ -134,12 +134,12 @@ DIRECTORIES=$(sort $(dir $(OBJECTS)))
 
 # Custom OpenCV support
 ifeq (${CUSTOM_OPENCV_SUPPORT},1)
-CXX_DEFINES+=-DCUSTOM_OPENCV_SUPPORT
-CXX_NVCC_INCLUDES+=-I${CUSTOM_OPENCV_INSTALLATION_PATH}/include
+CXX_NVCC_INCLUDES+=-I${CUSTOM_OPENCV_INSTALLATION_PATH}/include          \
+                   -I${CUSTOM_OPENCV_INSTALLATION_PATH}/include/opencv4
 CXX_LD_DIRS+=-L${CUSTOM_OPENCV_INSTALLATION_PATH}/lib
 CXX_LD_FLAGS+=-Wl,-rpath,${CUSTOM_OPENCV_INSTALLATION_PATH}/lib
-CXX_LD_LIBRARIES+=-lopencv_imgproc -lopencv_highgui -lopencv_core              \
-                  -lopencv_imgcodecs -lopencv_cudawarping
+CXX_LD_LIBRARIES+=-lopencv_imgproc -lopencv_highgui -lopencv_core  \
+                  -lopencv_imgcodecs -lopencv_features2d
 else
 CXX_LD_LIBRARIES+=$(shell pkg-config --libs-only-l opencv)
 endif

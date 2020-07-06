@@ -78,7 +78,10 @@ bool TestFeatureTracker::run(void) {
     feature_tracker_options.affine_est_offset = false;
 
     // Instantiate detectors (default is the Blender dataset)
-    load_image_dimensions(752,480);
+    if(!load_image_dimensions(752,480)) {
+      // Could not acquire the initialization parameters
+      return false;
+    }
     // Create feature detector & tracker for the GPU
     detector_gpu_.reset(new FASTGPU(image_width_,
                                     image_height_,

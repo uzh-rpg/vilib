@@ -74,7 +74,8 @@ protected:
                                const std::vector<cv::Mat> & image_pyramid2,
                                unsigned int diff_threshold) const;
     bool is_list_file(const char * file_path);
-    void load_image_dimensions(const std::size_t & width_default = 0,
+    bool verify_path(const char * path);
+    bool load_image_dimensions(const std::size_t & width_default = 0,
                                const std::size_t & height_default = 0);
 
     const char * name_;

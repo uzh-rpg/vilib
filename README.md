@@ -1,8 +1,23 @@
 # CUDA Visual Library
 
+This repository holds some GPU optimized algorithms by the "Robotics and Perception Group" at the Dep. of Informatics, "University of Zurich", and Dep. of Neuroinformatics, ETH and University of Zurich.
+
+![Cover photo](assets/publication.png)
+
 ## Publication
-Please find the paper acompanying this repository on arXiv:
-> Balazs Nagy, Philipp Foehn, Davide Scaramuzza, [Faster than FAST: GPU-Accelerated Frontend for High-Speed VIO](https://arxiv.org/abs/2003.13493), arXiv 2003.13493, March 2020
+
+If you use this code in an academic context, please cite the following [IROS 2020 paper](http://rpg.ifi.uzh.ch/docs/IROS20_Nagy.pdf).
+
+Balazs Nagy, Philipp Foehn, and Davide Scaramuzza: **Faster than FAST: GPU-Accelerated Frontend for High-Speed VIO**, IEEE/RSJ Int. Conf. on Intelligent Robots and Systems (IROS), 2020.
+
+```
+@inproceedings{Nagy2020,
+  author = {Nagy, Balazs and Foehn, Philipp and Scaramuzza, Davide},
+  title = {{Faster than FAST}: {GPU}-Accelerated Frontend for High-Speed {VIO}},
+  booktitle = {IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS)},
+  year = {2020}
+}
+```
 
 ## Organization
 

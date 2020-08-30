@@ -118,15 +118,15 @@ make solib -j4
 2. Compile the test suite (optional)
 ```bash
 # We prepared a test suite for the library
-# that verifies the provided functionalities
+# that verifies the code and provides an example for the available functionalities
 make test -j4
 # Download the dataset: some tests require a dataset
 # We used the Machine Hall 01 from ETH Zürich.
 cd test/images
-# Follow the instructions
+# Follow the instructions of the downloader script:
 ./create_feature_detector_evaluation_data.sh
 # Once the dataset has been acquired successfully,
-# simply run the test suite:
+# simply run the test suite
 ./test_vilib
 ```
 3. Install the library
@@ -151,6 +151,13 @@ CXX_LD_LIBRARIES += -lvilib
 CXX_LD_FLAGS += -Wl, -rpath,<path to the directory containing the .so>
 # or modify the LD_LIBRARY_PATH environment variable
 ```
+
+## Examples
+
+The test suite serves two purposes: verifying the functionality and providing examples for setting up the library calls properly. In case you would like to use the library in your own application, please consult the examples below:
+
+- Feature detection: [here](blob/master/visual_lib/test/src/feature_detection/test_fast.cpp)
+- Feature tracking: [here](blob/master/visual_lib/test/src/high_level/test_featuretracker.cpp)
 
 ## Dependencies
 

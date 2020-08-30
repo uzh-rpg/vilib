@@ -156,12 +156,12 @@ CXX_LD_FLAGS += -Wl, -rpath,<path to the directory containing the .so>
 
 The test suite serves two purposes: verifying the functionality and providing examples for setting up the library calls properly.
 
-The EuRoC Machine Hall dataset mentioned in the paper for feature detection and tracking can be downloaded through our [custom script](blob/master/visual_lib/test/images/create_feature_detector_evaluation_data.sh). This is the dataset, that is used by default in the test code. Please note, that in our online example, the test image count has been reduced from the original 3682 to 100 for a quicker evaluation, but this may be readjusted any time [here](blob/master/visual_lib/test/src/tests.cpp).
+The EuRoC Machine Hall dataset mentioned in the paper for feature detection and tracking can be downloaded through our [custom script](https://github.com/uzh-rpg/vilib/blob/master/visual_lib/test/images/create_feature_detector_evaluation_data.sh). This is the dataset, that is used by default in the test code. Please note, that in our online example, the test image count has been reduced from the original 3682 to 100 for a quicker evaluation, but this may be readjusted any time [here](https://github.com/uzh-rpg/vilib/blob/master/visual_lib/test/src/tests.cpp).
 
 In case you would like to use the library in your application, we kindly ask you to consult the examples below:
 
-- Feature detection: [here](blob/master/visual_lib/test/src/feature_detection/test_fast.cpp)
-- Feature tracking: [here](blob/master/visual_lib/test/src/high_level/test_featuretracker.cpp)
+- Feature detection: [here](https://github.com/uzh-rpg/vilib/blob/master/visual_lib/test/src/feature_detection/test_fast.cpp)
+- Feature tracking: [here](https://github.com/uzh-rpg/vilib/blob/master/visual_lib/test/src/high_level/test_featuretracker.cpp)
 
 ## Dependencies
 

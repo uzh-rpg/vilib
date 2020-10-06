@@ -2,7 +2,8 @@
 
 This repository holds some GPU optimized algorithms by the "Robotics and Perception Group" at the Dep. of Informatics, "University of Zurich", and Dep. of Neuroinformatics, ETH and University of Zurich.
 
-![Cover photo](assets/publication.png)
+<a href="https://youtu.be/5Ndi9IYpI68" target="_blank"><img src="./assets/publication.png" 
+width="900" height="480" border="10" /></a>
 
 ## Publication
 

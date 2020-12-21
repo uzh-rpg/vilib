@@ -1,6 +1,6 @@
 /*
- * FAST feature detector on the CPU (as provided by OpenCV)
- * fast_cpu.h
+ * Tests for image pyramid functionalities
+ * test_pyramid.h
  *
  * Copyright (c) 2019-2020 Balazs Nagy,
  * Robotics and Perception Group, University of Zurich
@@ -34,30 +34,22 @@
 
 #pragma once
 
-#include <opencv2/features2d.hpp>
-#include "vilib/feature_detection/detector_base.h"
+#include "test/test_base.h"
 
-namespace vilib {
-namespace opencv { 
-
-template<bool use_grid>
-class FASTCPU : public DetectorBase<use_grid> {
+class TestConvFilter : public TestBase {
 public:
-  FASTCPU(const std::size_t image_width,
-          const std::size_t image_height,
-          const std::size_t cell_size_width,
-          const std::size_t cell_size_height,
-          const std::size_t min_level,
-          const std::size_t max_level,
-          const std::size_t horizontal_border,
-          const std::size_t vertical_border,
-          const float threshold);
-  ~FASTCPU(void);
-  void detect(const std::vector<cv::Mat> & image) override;
+  TestConvFilter(const char * image_path);
+  ~TestConvFilter(void);
+protected:
+  bool run(void);
 private:
-  float threshold_;
-  cv::Ptr<cv::Feature2D> detector_;
-};
+  bool test_2d_separated(void);
+  bool test_1d_row(void);
+  bool test_1d_column(void);
 
-} // namespace opencv
-} // namespace vilib
+  cv::Mat convfilter_image_cpu_;
+  cv::Mat convfilter_image_gpu_;
+  unsigned char* d_image_in_;
+  unsigned char* d_image_tmp_;
+  unsigned char* d_image_out_;
+};

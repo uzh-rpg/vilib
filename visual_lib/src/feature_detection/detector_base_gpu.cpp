@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -198,7 +198,12 @@ void DetectorBaseGPU::saveResponses(const char * prefix) const {
     std::string filename = prefix;
     filename += "_l";
     filename += std::to_string(l);
-    filename += ".exr";
+    filename += ".tiff";
+#if 0
+    std::cout << "Filename: " << filename
+             << " | x: " << responses_[l_resp].width_
+             << " | y: " << responses_[l_resp].height_ << std::endl;
+#endif
     // save response image
     cv::imwrite(filename.c_str(),response);
   }
@@ -223,6 +228,7 @@ void DetectorBaseGPU::processGrid(void) {
 }
 
 void DetectorBaseGPU::processGridAndThreshold(float quality_level) {
+  BENCHMARK_START_HOST(DetectorBenchmark,Download,true);
   copyGridToHost();
   // Find the maximum score in the grid
   // Note: this could be found also on the GPU side easily
@@ -237,14 +243,23 @@ void DetectorBaseGPU::processGridAndThreshold(float quality_level) {
       grid_.setOccupied(i);
     }
   }
+  BENCHMARK_STOP_HOST(DetectorBenchmark,Download);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,Pyramid);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,CRF);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,NMS);
 }
 
 void DetectorBaseGPU::processGridCustom(std::function<void(const std::size_t &,
                                                            const float *,
                                                            const float *,
                                                            const int *)> callback) {
+  BENCHMARK_START_HOST(DetectorBenchmark,Download,true);
   copyGridToHost();
   callback(feature_cell_count_,h_pos_,h_score_,h_level_);
+  BENCHMARK_STOP_HOST(DetectorBenchmark,Download);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,Pyramid);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,CRF);
+  BENCHMARK_COLLECT_DEVICE(DetectorBenchmark,NMS);
 }
 
 } // namespace vilib

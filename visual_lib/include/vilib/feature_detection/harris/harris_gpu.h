@@ -1,6 +1,6 @@
 /*
- * FAST feature detector on the CPU (as provided by OpenCV)
- * fast_cpu.h
+ * Harris/Shi-Tomasi feature detector on the GPU
+ * harris_gpu.h
  *
  * Copyright (c) 2019-2020 Balazs Nagy,
  * Robotics and Perception Group, University of Zurich
@@ -34,16 +34,16 @@
 
 #pragma once
 
-#include <opencv2/features2d.hpp>
-#include "vilib/feature_detection/detector_base.h"
+#include <vector>
+#include "vilib/feature_detection/detector_base_gpu.h"
+#include "vilib/storage/subframe.h"
+#include "vilib/preprocess/conv_filter.h"
 
 namespace vilib {
-namespace opencv { 
 
-template<bool use_grid>
-class FASTCPU : public DetectorBase<use_grid> {
+class HarrisGPU : public DetectorBaseGPU {
 public:
-  FASTCPU(const std::size_t image_width,
+  HarrisGPU(const std::size_t image_width,
           const std::size_t image_height,
           const std::size_t cell_size_width,
           const std::size_t cell_size_height,
@@ -51,13 +51,33 @@ public:
           const std::size_t max_level,
           const std::size_t horizontal_border,
           const std::size_t vertical_border,
-          const float threshold);
-  ~FASTCPU(void);
-  void detect(const std::vector<cv::Mat> & image) override;
+          const conv_filter_border_type_t filter_border_type,
+          // Use Harris (true) or Shi-Tomasi (false)
+          const bool use_harris,
+          // Harris constant, unused for Shi-Tomasi
+          const float harris_k,
+          // Features are dropped whose score is less than
+          // (best feature score) * quality_level
+          const float quality_level);
+  ~HarrisGPU(void);
+  void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid);
+  void detect(const std::vector<std::shared_ptr<Subframe>> & pyramid,
+              std::function<void(const std::size_t & /* cell count */,
+                                 const float *       /* pos */,
+                                 const float *       /* score */,
+                                 const int *         /* level */)> callback);
 private:
-  float threshold_;
-  cv::Ptr<cv::Feature2D> detector_;
+  void detectBase(const std::vector<std::shared_ptr<Subframe>> & pyramid);
+
+  // Detector parameters
+  conv_filter_border_type_t filter_border_type_;
+  float quality_level_; // Harris, or Shi-Tomasi quality level
+  bool use_harris_; // Use Harris, or Shi-Tomasi as response score
+  float harris_k_;  // Harris coefficient k, usually around ~ 0.04f
+
+  // Intermediate buffers
+  std::vector<float *> d_result_;
+  std::vector<std::size_t> d_result_pitch_elements_;
 };
 
-} // namespace opencv
 } // namespace vilib

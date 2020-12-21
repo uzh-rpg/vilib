@@ -40,7 +40,8 @@
 
 namespace vilib {
 
-DetectorBase::DetectorBase(const std::size_t image_width,
+template<bool use_grid>
+DetectorBase<use_grid>::DetectorBase(const std::size_t image_width,
                            const std::size_t image_height,
                            const std::size_t cell_size_width,
                            const std::size_t cell_size_height,
@@ -62,35 +63,54 @@ DetectorBase::DetectorBase(const std::size_t image_width,
         n_cols_,
         n_rows_) {
   // populate keypoints_ grid cell for display!
-  keypoints_.resize(n_cols_ * n_rows_, FeaturePoint(0.0,0.0,0.0,-1));
-}
-
-void DetectorBase::detect(const std::vector<cv::Mat> & image) {
-  (void)image;
-}
-
-void DetectorBase::reset(void) {
-  BENCHMARK_START_HOST(DetectorBenchmark,Reset,false);
-  grid_.reset();
-  BENCHMARK_STOP_HOST(DetectorBenchmark,Reset);
-}
-
-std::size_t DetectorBase::count(void) const {
-  return grid_.getOccupiedCount();
-}
-
-void DetectorBase::addFeaturePoint(double x, double y, double score, unsigned int level) {
-  // check if we have already something in this cell?
-  std::size_t cell_index = ((std::size_t)(y/cell_size_height_))*n_cols_ + ((std::size_t)(x/cell_size_width_));
-  bool cell_occupied = grid_.isOccupied(cell_index);
-  if(((cell_occupied == true) && keypoints_[cell_index].score_ < score) ||
-     (cell_occupied == false)) {
-    keypoints_[cell_index] = FeaturePoint(x,y,score,level);
-    grid_.setOccupied(cell_index);
+  if(use_grid) {
+    keypoints_.resize(n_cols_ * n_rows_, FeaturePoint(0.0,0.0,0.0,-1));
   }
 }
 
-void DetectorBase::displayFeatureGrid(const char * title,
+template<bool use_grid>
+void DetectorBase<use_grid>::detect(const std::vector<cv::Mat> & image) {
+  (void)image;
+}
+
+template<bool use_grid>
+void DetectorBase<use_grid>::reset(void) {
+  BENCHMARK_START_HOST(DetectorBenchmark,Reset,false);
+  if(use_grid) {
+    grid_.reset();
+  } else {
+    keypoints_.clear();
+  }
+  BENCHMARK_STOP_HOST(DetectorBenchmark,Reset);
+}
+
+template<bool use_grid>
+std::size_t DetectorBase<use_grid>::count(void) const {
+  if(use_grid) {
+    return grid_.getOccupiedCount();
+  } else {
+    return keypoints_.size();
+  }
+}
+
+template<bool use_grid>
+void DetectorBase<use_grid>::addFeaturePoint(double x, double y, double score, unsigned int level) {
+  if(use_grid) {
+    // check if we have already something in this cell?
+    std::size_t cell_index = ((std::size_t)(y/cell_size_height_))*n_cols_ + ((std::size_t)(x/cell_size_width_));
+    bool cell_occupied = grid_.isOccupied(cell_index);
+    if(((cell_occupied == true) && keypoints_[cell_index].score_ < score) ||
+      (cell_occupied == false)) {
+      keypoints_[cell_index] = FeaturePoint(x,y,score,level);
+      grid_.setOccupied(cell_index);
+    }
+  } else {
+    keypoints_.emplace_back(x,y,score,level);
+  }
+}
+
+template<bool use_grid>
+void DetectorBase<use_grid>::displayFeatures(const char * title,
                                       const std::vector<cv::Mat> & image_pyramid,
                                       bool draw_on_level0,
                                       bool draw_cells) const {
@@ -100,23 +120,23 @@ void DetectorBase::displayFeatureGrid(const char * title,
     // draw circles for the identified keypoints
     for(std::size_t i=0;i<keypoints_.size();++i) {
       // skip points whose grid cell is not occupied
-      if (grid_.isOccupied(i)==false){
+      if (use_grid && grid_.isOccupied(i)==false){
         continue;
       } else if(!draw_on_level0 && keypoints_[i].level_ != l) {
         continue;
       }
-      double scale = draw_on_level0?1.0:(double)(1<<l);
+      double scale = draw_on_level0?1.0:static_cast<double>(1<<l);
       double x = keypoints_[i].x_ * 1024 / scale;
       double y = keypoints_[i].y_ * 1024 / scale;
       cv::circle(canvas,
-                 cv::Point((int)x,(int)y),
+                 cv::Point(static_cast<int>(x),static_cast<int>(y)),
                  (keypoints_[i].level_+1)*3*1024,
                  cv::Scalar(0,0,255), // B,G,R
                  1,
                  8,
                  10);
     }
-    if(draw_on_level0 && draw_cells) {
+    if(use_grid && draw_on_level0 && draw_cells) {
       for(std::size_t r=0;r<n_rows_;++r) {
         for(std::size_t c=0;c<n_cols_;++c) {
           cv::rectangle(canvas,
@@ -138,35 +158,8 @@ void DetectorBase::displayFeatureGrid(const char * title,
   }
 }
 
-void DetectorBase::displayFeatures(const char * title,
-                                   const std::vector<cv::Mat> & image_pyramid,
-                                   bool draw_on_level0) const {
-  for(std::size_t l=0;l<image_pyramid.size();++l) {
-    cv::Mat canvas;
-    cv::cvtColor(image_pyramid[l],canvas,cv::COLOR_GRAY2RGB);
-    // draw circles for the identified keypoints
-    for(std::size_t i=0;i<keypoints_.size();++i) {
-      if(!draw_on_level0 && keypoints_[i].level_ != l) {
-        continue;
-      }
-      double scale = draw_on_level0?1.0:(double)(1<<l);
-      double x = keypoints_[i].x_ * 1024 / scale;
-      double y = keypoints_[i].y_ * 1024 / scale;
-      cv::circle(canvas,
-                 cv::Point((int)x,(int)y),
-                 (keypoints_[i].level_+1)*3*1024,
-                 cv::Scalar(0,0,255), // B,G,R
-                 1,
-                 8,
-                 10);
-    }
-    cv::imshow(title, canvas);
-    cv::waitKey();
-
-    if(draw_on_level0) {
-      break;
-    }
-  }
-}
+// Explicit instantiations
+template class DetectorBase<false>;
+template class DetectorBase<true>;
 
 } // namespace vilib

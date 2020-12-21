@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -41,11 +41,13 @@
 #include "test/arguments.h"
 // Preprocessing
 #include "test/preprocess/test_pyramid.h"
+#include "test/preprocess/test_conv_filter.h"
 // Storage
 #include "test/storage/test_subframepool.h"
 #include "test/storage/test_pyramidpool.h"
 // Feature detection
 #include "test/feature_detection/test_fast.h"
+#include "test/feature_detection/test_harris.h"
 // High-level functionalities
 #include "test/high_level/test_featuretracker.h"
 
@@ -82,11 +84,13 @@ int main(int argc, char * argv[]) {
   std::vector<struct TestCase> tests;
   // Preprocessing
   tests.emplace_back(new TestPyramid(TEST_IMAGE_ANGRY_BIRDS_752_480));
+  tests.emplace_back(new TestConvFilter(TEST_IMAGE_ANGRY_BIRDS_752_480));
   // Storage
   tests.emplace_back(new TestSubframePool());
   tests.emplace_back(new TestPyramidPool());
   // Feature detection
   tests.emplace_back(new TestFAST(TEST_IMAGE_LIST_EUROC_752_480,100));
+  tests.emplace_back(new TestHarris(TEST_IMAGE_LIST_EUROC_752_480,100));
   // High level
   tests.emplace_back(new TestFeatureTracker(TEST_IMAGE_LIST_EUROC_752_480,100));
 

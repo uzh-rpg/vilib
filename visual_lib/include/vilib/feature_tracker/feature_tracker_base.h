@@ -55,8 +55,6 @@ public:
   virtual void track(const std::shared_ptr<FrameBundle> & cur_frames,
                      std::size_t & total_tracked_features_num,
                      std::size_t & total_detected_features_num) = 0;
-  virtual void setDetectorCPU(std::shared_ptr<DetectorBase> & detector,
-                      const std::size_t & camera_id);
   virtual void setDetectorGPU(std::shared_ptr<DetectorBaseGPU> & detector,
                       const std::size_t & camera_id);
   void setBestNFeatures(int n);

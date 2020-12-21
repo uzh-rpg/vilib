@@ -1,6 +1,6 @@
 /*
- * FAST feature detector on the CPU (as provided by OpenCV)
- * fast_cpu.h
+ * Harris/Shi-Tomasi feature detector on the CPU (as provided by OpenCV)
+ * harris_cpu.h
  *
  * Copyright (c) 2019-2020 Balazs Nagy,
  * Robotics and Perception Group, University of Zurich
@@ -41,22 +41,33 @@ namespace vilib {
 namespace opencv { 
 
 template<bool use_grid>
-class FASTCPU : public DetectorBase<use_grid> {
+class HarrisCPU : public DetectorBase<use_grid> {
 public:
-  FASTCPU(const std::size_t image_width,
-          const std::size_t image_height,
-          const std::size_t cell_size_width,
-          const std::size_t cell_size_height,
-          const std::size_t min_level,
-          const std::size_t max_level,
-          const std::size_t horizontal_border,
-          const std::size_t vertical_border,
-          const float threshold);
-  ~FASTCPU(void);
+  HarrisCPU(const std::size_t image_width,
+            const std::size_t image_height,
+            const std::size_t cell_size_width,
+            const std::size_t cell_size_height,
+            const std::size_t min_level,
+            const std::size_t max_level,
+            const std::size_t horizontal_border,
+            const std::size_t vertical_border,
+            // Use Harris (true) or Shi-Tomasi (false)
+            const bool use_harris,
+            // Harris constant, unused for Shi-Tomasi
+            const double harris_k,
+            // Features are dropped whose score is less than
+            // (best feature score) * quality_level
+            const double quality_level,
+            // Minimum Euclidiean distance between features
+            const double min_euclidiean_distance);
+  ~HarrisCPU(void);
   void detect(const std::vector<cv::Mat> & image) override;
 private:
-  float threshold_;
-  cv::Ptr<cv::Feature2D> detector_;
+  bool use_harris_;
+  const double harris_k_;
+  const double quality_level_;
+  const double min_euclidean_distance_;
+  std::size_t max_corner_count_;
 };
 
 } // namespace opencv

@@ -51,13 +51,6 @@ FeatureTrackerBase::FeatureTrackerBase(const FeatureTrackerOptions & options,
 FeatureTrackerBase::~FeatureTrackerBase(void) {
 }
 
-void FeatureTrackerBase::setDetectorCPU(std::shared_ptr<DetectorBase> & detector,
-                                        const std::size_t & camera_id) {
-  (void)detector;
-  (void)camera_id;
-  assert(0 && "This handler should have been overridden");
-}
-
 void FeatureTrackerBase::setDetectorGPU(std::shared_ptr<DetectorBaseGPU> & detector,
                                         const std::size_t & camera_id) {
   (void)detector;

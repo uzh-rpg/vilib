@@ -1,6 +1,6 @@
 /*
- * FAST feature detector on the CPU (as provided by OpenCV)
- * fast_cpu.h
+ * Harris/Shi-Tomasi feature detector utilities in CUDA
+ * harris_gpu_cuda_tools.h
  *
  * Copyright (c) 2019-2020 Balazs Nagy,
  * Robotics and Perception Group, University of Zurich
@@ -34,30 +34,32 @@
 
 #pragma once
 
-#include <opencv2/features2d.hpp>
-#include "vilib/feature_detection/detector_base.h"
+#include "vilib/preprocess/conv_filter.h"
 
 namespace vilib {
-namespace opencv { 
 
-template<bool use_grid>
-class FASTCPU : public DetectorBase<use_grid> {
-public:
-  FASTCPU(const std::size_t image_width,
-          const std::size_t image_height,
-          const std::size_t cell_size_width,
-          const std::size_t cell_size_height,
-          const std::size_t min_level,
-          const std::size_t max_level,
-          const std::size_t horizontal_border,
-          const std::size_t vertical_border,
-          const float threshold);
-  ~FASTCPU(void);
-  void detect(const std::vector<cv::Mat> & image) override;
-private:
-  float threshold_;
-  cv::Ptr<cv::Feature2D> detector_;
-};
+void harris_gpu_array_multiply(const float * d_input_a,
+                               const int input_a_pitch,
+                               const float * d_input_b,
+                               const int input_b_pitch,
+                               float * d_output,
+                               const int output_pitch,
+                               const int cols,
+                               const int rows,
+                               cudaStream_t stream);
+void harris_gpu_calc_corner_response(const float * d_dx2,
+                                     const int dx2_pitch,
+                                     const float * d_dy2,
+                                     const int dy2_pitch,
+                                     const float * d_dxdy,
+                                     const int dxdy_pitch,
+                                     float * d_response,
+                                     const int response_pitch,
+                                     const int cols,
+                                     const int rows,
+                                     const conv_filter_border_type_t border_type,
+                                     const bool use_harris,
+                                     const float k,
+                                     cudaStream_t stream);
 
-} // namespace opencv
 } // namespace vilib

@@ -1,6 +1,6 @@
 /*
- * FAST feature detector on the CPU (as provided by OpenCV)
- * fast_cpu.h
+ * Tests for the Harris/Shi-Tomasi feature detector functionalities
+ * test_harris.h
  *
  * Copyright (c) 2019-2020 Balazs Nagy,
  * Robotics and Perception Group, University of Zurich
@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- * 1. Redistributions of source code must retain the above copyright notice, this
+ *  1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -34,30 +34,24 @@
 
 #pragma once
 
-#include <opencv2/features2d.hpp>
+#include <memory>
+#include <unordered_map>
+#include "test/test_base.h"
 #include "vilib/feature_detection/detector_base.h"
+#include "vilib/feature_detection/detector_base_gpu.h"
+#include "vilib/timer.h"
+#include "vilib/statistics.h"
 
-namespace vilib {
-namespace opencv { 
-
-template<bool use_grid>
-class FASTCPU : public DetectorBase<use_grid> {
+class TestHarris : public TestBase {
 public:
-  FASTCPU(const std::size_t image_width,
-          const std::size_t image_height,
-          const std::size_t cell_size_width,
-          const std::size_t cell_size_height,
-          const std::size_t min_level,
-          const std::size_t max_level,
-          const std::size_t horizontal_border,
-          const std::size_t vertical_border,
-          const float threshold);
-  ~FASTCPU(void);
-  void detect(const std::vector<cv::Mat> & image) override;
-private:
-  float threshold_;
-  cv::Ptr<cv::Feature2D> detector_;
-};
+  TestHarris(const char * file_path, const int max_image_num = -1);
+  ~TestHarris(void);
+protected:
+  bool run(void);
+  bool run_benchmark(std::vector<vilib::Statistics> & stat_cpu,
+                     std::vector<vilib::Statistics> & stat_gpu);
 
-} // namespace opencv
-} // namespace vilib
+  // Instantiated detectors
+  std::shared_ptr<vilib::DetectorBase<true>> detector_cpu_;
+  std::shared_ptr<vilib::DetectorBaseGPU> detector_gpu_;
+};

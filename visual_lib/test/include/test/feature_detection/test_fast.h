@@ -55,6 +55,6 @@ protected:
                                  bool draw_cells);
 
   // Instantiated detectors
-  std::shared_ptr<vilib::DetectorBase> detector_cpu_;
+  std::shared_ptr<vilib::DetectorBase<false>> detector_cpu_;
   std::shared_ptr<vilib::DetectorBaseGPU> detector_gpu_;
 };

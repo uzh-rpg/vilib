@@ -38,6 +38,7 @@
 #include "vilib/config.h"
 #include "vilib/feature_tracker/feature_tracker_gpu.h"
 #include "vilib/feature_detection/fast/fast_gpu.h"
+#include "vilib/feature_detection/harris/harris_gpu.h"
 #include "vilib/storage/pyramid_pool.h"
 #include "vilib/cuda_common.h"
 #include "vilib/timer.h"
@@ -58,10 +59,20 @@ using namespace vilib;
 #define FEATURE_DETECTOR_HORIZONTAL_BORDER    8
 #define FEATURE_DETECTOR_VERTICAL_BORDER      8
 
+// Feature detector selection
+#define FEATURE_DETECTOR_FAST                 0
+#define FEATURE_DETECTOR_HARRIS               1
+#define FEATURE_DETECTOR_SHI_TOMASI           2
+#define FEATURE_DETECTOR_USED                 FEATURE_DETECTOR_HARRIS
+
 // FAST parameters
 #define FEATURE_DETECTOR_FAST_EPISLON         10.f
 #define FEATURE_DETECTOR_FAST_ARC_LENGTH      10
 #define FEATURE_DETECTOR_FAST_SCORE           SUM_OF_ABS_DIFF_ON_ARC
+// Harris/Shi-Tomasi parameters
+#define FEATURE_DETECTOR_HARRIS_K             0.04f
+#define FEATURE_DETECTOR_HARRIS_QUALITY_LEVEL 0.1f
+#define FEATURE_DETECTOR_HARRIS_BORDER_TYPE   conv_filter_border_type::BORDER_SKIP
 
 // Test framework options
 #define START_AT_FRAME_ID_N                   0
@@ -96,6 +107,7 @@ bool TestFeatureTracker::run(void) {
       return false;
     }
     // Create feature detector & tracker for the GPU
+#if (FEATURE_DETECTOR_USED == FEATURE_DETECTOR_FAST)
     detector_gpu_.reset(new FASTGPU(image_width_,
                                     image_height_,
                                     FEATURE_DETECTOR_CELL_SIZE_WIDTH,
@@ -107,6 +119,20 @@ bool TestFeatureTracker::run(void) {
                                     FEATURE_DETECTOR_FAST_EPISLON,
                                     FEATURE_DETECTOR_FAST_ARC_LENGTH,
                                     FEATURE_DETECTOR_FAST_SCORE));
+#elif (FEATURE_DETECTOR_USED == FEATURE_DETECTOR_HARRIS || FEATURE_DETECTOR_USED == FEATURE_DETECTOR_SHI_TOMASI)
+    detector_gpu_.reset(new HarrisGPU(image_width_,
+                                      image_height_,
+                                      FEATURE_DETECTOR_CELL_SIZE_WIDTH,
+                                      FEATURE_DETECTOR_CELL_SIZE_HEIGHT,
+                                      FEATURE_DETECTOR_MIN_LEVEL,
+                                      FEATURE_DETECTOR_MAX_LEVEL,
+                                      FEATURE_DETECTOR_HORIZONTAL_BORDER,
+                                      FEATURE_DETECTOR_VERTICAL_BORDER,
+                                      FEATURE_DETECTOR_HARRIS_BORDER_TYPE,
+                                      (FEATURE_DETECTOR_USED == FEATURE_DETECTOR_HARRIS),
+                                      FEATURE_DETECTOR_HARRIS_K,
+                                      FEATURE_DETECTOR_HARRIS_QUALITY_LEVEL));
+#endif /* FEATURE_DETECTOR_USED */
     tracker_gpu_.reset(new FeatureTrackerGPU(feature_tracker_options,1));
     tracker_gpu_->setDetectorGPU(detector_gpu_,0);
 

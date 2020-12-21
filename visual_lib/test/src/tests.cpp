@@ -58,6 +58,7 @@ using namespace vilib;
 #define TEST_IMAGE_ANGRY_BIRDS_752_480         "test/images/angry_birds_752_480.jpg"
 #define TEST_IMAGE_BLENDER_HUT_752_480         "test/images/scenery/hut/00.png"
 #define TEST_IMAGE_LENNA_512_512               "test/images/lenna.png"
+#define TEST_IMAGE_CHESSBOARD_798_798          "test/images/chessboard_798_798.png"
 /*
  * To have the complete EUROC Machine Hall 01 dataset frames at 752x480 & 640x480:
  * cd images

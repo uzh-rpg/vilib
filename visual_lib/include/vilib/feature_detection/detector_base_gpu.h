@@ -51,7 +51,10 @@ public:
                   const std::size_t min_level,
                   const std::size_t max_level,
                   const std::size_t horizontal_border,
-                  const std::size_t vertical_border);
+                  const std::size_t vertical_border,
+                  // A response at (x,y) must be strictly greater than its neighborhood
+                  // otherwise it is suppressed
+                  const bool strictly_greater);
   virtual ~DetectorBaseGPU(void);
 
   void setStream(cudaStream_t stream);
@@ -99,6 +102,8 @@ protected:
   std::size_t feature_grid_bytes_;
   float * d_feature_grid_;
   float * h_feature_grid_;
+  // NMS parameters
+  bool strictly_greater_;
   // Feature grid variables
   // Host pointers
   float * h_pos_;

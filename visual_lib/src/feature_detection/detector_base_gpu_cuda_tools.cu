@@ -697,6 +697,7 @@ __host__ void detector_base_gpu_regular_nms(const int image_width,
   CUDA_KERNEL_CHECK();
 }
 
+template<bool strictly_greater>
 __global__ void detector_base_gpu_grid_nms_kernel(const int level,
                                                   const int min_level,
                                                   const int image_width,
@@ -783,7 +784,11 @@ __global__ void detector_base_gpu_grid_nms_kernel(const int level,
 #endif /* USE_PRECALCULATED_INDICES */
 
           // Perform non-maximum suppression
-          center_value *= -0.5f*(-1.0f+copysignf(1.0f,d_response_ptr[j]-center_value));
+          if(strictly_greater) {
+            center_value *= -0.5f*(-1.0f+copysignf(1.0f,d_response_ptr[j]-center_value));
+          } else {
+            center_value *= 0.5f*(1.0f+copysignf(1.0f,center_value-d_response_ptr[j]));
+          }
           /*
            * Note to future self:
            * Interestingly on Maxwell (960M), checking for equivalence with 0.0f, results
@@ -882,6 +887,7 @@ __host__ void detector_base_gpu_grid_nms(const int image_level,
                                          const int cell_size_height,
                                          const int horizontal_cell_num,
                                          const int vertical_cell_num,
+                                         const bool strictly_greater,
                                          /* pitch in bytes/sizeof(float) */
                                          const int response_pitch_elements,
                                          const float * d_response,
@@ -903,7 +909,13 @@ __host__ void detector_base_gpu_grid_nms(const int image_level,
   int launched_warp_count = (p.threads_per_block.x*p.threads_per_block.y*p.threads_per_block.z+32-1)/32;
   std::size_t shm_mem_size = launched_warp_count*4*sizeof(float);
 
-  detector_base_gpu_grid_nms_kernel<<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
+  decltype(&detector_base_gpu_grid_nms_kernel<false>) kernel;
+  if(strictly_greater) {
+    kernel = detector_base_gpu_grid_nms_kernel<true>;
+  } else {
+    kernel = detector_base_gpu_grid_nms_kernel<false>;
+  }
+  kernel<<<p.blocks_per_grid,p.threads_per_block,shm_mem_size,stream>>>(
                                                 image_level,
                                                 min_image_level,
                                                 image_width,

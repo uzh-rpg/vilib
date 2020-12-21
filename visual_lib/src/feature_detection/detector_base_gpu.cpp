@@ -47,7 +47,8 @@ DetectorBaseGPU::DetectorBaseGPU(const std::size_t image_width,
                                  const std::size_t min_level,
                                  const std::size_t max_level,
                                  const std::size_t horizontal_border,
-                                 const std::size_t vertical_border) :
+                                 const std::size_t vertical_border,
+                                 const bool strictly_greater) :
   DetectorBase(image_width,
                image_height,
                cell_size_width,
@@ -56,6 +57,7 @@ DetectorBaseGPU::DetectorBaseGPU(const std::size_t image_width,
                max_level,
                horizontal_border,
                vertical_border),
+  strictly_greater_(strictly_greater),
   stream_(0) {
   assert((cell_size_width%32) == 0);
   assert((cell_size_height%static_cast<std::size_t>(pow(2,max_level-1))) == 0);
@@ -163,6 +165,7 @@ void DetectorBaseGPU::processResponse(void) {
                                cell_size_height_,
                                n_cols_,
                                n_rows_,
+                               strictly_greater_,
                                /* wpitch in bytes/sizeof(float) */
                                responses_[l_resp].pitch_elements_,
                                responses_[l_resp].data_,

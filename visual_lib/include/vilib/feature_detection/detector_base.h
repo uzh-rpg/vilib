@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -41,6 +41,7 @@
 
 namespace vilib {
 
+template<bool use_grid>
 class DetectorBase {
 public:
   // identified interest points
@@ -57,11 +58,17 @@ public:
 
   DetectorBase(const std::size_t image_width,
                const std::size_t image_height,
+               // width of a cell in pixels (unused if use_grid false)
                const std::size_t cell_size_width,
+               // height of a cell in pixels (unused if use_grid false)
                const std::size_t cell_size_height,
+               // minimum pyramid level (greatest resolution) where the detection takes place (inclusive)
                const std::size_t min_level,
+               // maximum pyramid level (lowest resolution) where the detection takes place (exclusive)
                const std::size_t max_level,
+               // number of pixels on the left and right borders to be skipped
                const std::size_t horizontal_border,
+               // number of pixels on the top and bottom borders to be skipped
                const std::size_t vertical_border);
   virtual ~DetectorBase(void) = default;
 
@@ -77,13 +84,10 @@ public:
   void addFeaturePoint(double x, double y, double score, unsigned int level);
   virtual std::size_t count(void) const;
 
-  void displayFeatureGrid(const char * title,
-                          const std::vector<cv::Mat> & image_pyramid,
-                          bool draw_on_level0,
-                          bool draw_cells) const;
   void displayFeatures(const char * title,
-                       const std::vector<cv::Mat> & image_pyramid,
-                       bool draw_on_level0) const;
+                          const std::vector<cv::Mat> & image_pyramid,
+                          bool draw_on_level0 = true,
+                          bool draw_cells = true) const;
 protected:
   // cell size (width & height)
   std::size_t cell_size_width_;

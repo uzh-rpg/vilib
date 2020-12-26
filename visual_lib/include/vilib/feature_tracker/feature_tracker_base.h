@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -55,8 +55,6 @@ public:
   virtual void track(const std::shared_ptr<FrameBundle> & cur_frames,
                      std::size_t & total_tracked_features_num,
                      std::size_t & total_detected_features_num) = 0;
-  virtual void setDetectorCPU(std::shared_ptr<DetectorBase> & detector,
-                      const std::size_t & camera_id);
   virtual void setDetectorGPU(std::shared_ptr<DetectorBaseGPU> & detector,
                       const std::size_t & camera_id);
   void setBestNFeatures(int n);

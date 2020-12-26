@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -67,7 +67,8 @@ FASTGPU::FASTGPU(const std::size_t image_width,
                   min_level,
                   max_level,
                   std::max(static_cast<std::size_t>(MINIMUM_BORDER),horizontal_border),
-                  std::max(static_cast<std::size_t>(MINIMUM_BORDER),vertical_border)),
+                  std::max(static_cast<std::size_t>(MINIMUM_BORDER),vertical_border),
+                  true),
   threshold_(threshold),
   min_arc_length_(min_arc_length),
   score_(score),

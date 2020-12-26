@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -43,7 +43,7 @@ namespace rosten {
 struct xys_tuple;
 
 template <bool use_grid>
-class FASTCPU : public DetectorBase {
+class FASTCPU : public DetectorBase<use_grid> {
 public:
   FASTCPU(const std::size_t image_width,
           const std::size_t image_height,
@@ -58,8 +58,6 @@ public:
           const fast_score score);
   ~FASTCPU(void);
   void detect(const std::vector<cv::Mat> & image) override;
-  std::size_t count(void) const override;
-  void reset(void);
 private:
   float threshold_;
   struct xys_tuple * (*fn_)(const unsigned char * im, int xsize, int ysize, int stride, int b, int* ret_num_corners);

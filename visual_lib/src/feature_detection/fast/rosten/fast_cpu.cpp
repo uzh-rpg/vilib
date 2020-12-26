@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -57,14 +57,14 @@ FASTCPU<use_grid>::FASTCPU(
                  const float threshold,
                  const int min_arc_length,
                  const fast_score score) :
-  DetectorBase(image_width,
+  DetectorBase<use_grid>(image_width,
                image_height,
                cell_size_width,
                cell_size_height,
                min_level,
                max_level,
-               std::max((std::size_t)MINIMUM_BORDER,horizontal_border),
-               std::max((std::size_t)MINIMUM_BORDER,vertical_border)),
+               std::max(static_cast<std::size_t>(MINIMUM_BORDER),horizontal_border),
+               std::max(static_cast<std::size_t>(MINIMUM_BORDER),vertical_border)),
    threshold_(threshold) {
   assert(min_arc_length >= 9 && min_arc_length <= 12);
   switch(score) {
@@ -100,26 +100,8 @@ FASTCPU<use_grid>::~FASTCPU(void) {
 }
 
 template <bool use_grid>
-std::size_t FASTCPU<use_grid>::count(void) const {
-  if(use_grid) {
-    return grid_.getOccupiedCount();
-  } else {
-    return keypoints_.size();
-  }
-}
-
-template <bool use_grid>
-void FASTCPU<use_grid>::reset(void) {
-  if(use_grid) {
-    grid_.reset();
-  } else {
-    keypoints_.clear();
-  }
-}
-
-template <bool use_grid>
 void FASTCPU<use_grid>::detect(const std::vector<cv::Mat> & image_pyramid) {
-  for(unsigned int l=min_level_;l<image_pyramid.size() && l<max_level_;++l) {
+  for(unsigned int l=this->min_level_;l<image_pyramid.size() && l<this->max_level_;++l) {
     int corner_num = 0;
     xys * corners = fn_(image_pyramid[l].data,
                        image_pyramid[l].cols,
@@ -128,11 +110,11 @@ void FASTCPU<use_grid>::detect(const std::vector<cv::Mat> & image_pyramid) {
                        threshold_,
                        &corner_num);
 
-    const int maxw = image_pyramid[l].cols-horizontal_border_;
-    const int maxh = image_pyramid[l].rows-vertical_border_;
+    const int maxw = image_pyramid[l].cols-this->horizontal_border_;
+    const int maxh = image_pyramid[l].rows-this->vertical_border_;
     for(int i=0;i<corner_num;++i) {
-      if(corners[i].x < (int)horizontal_border_ ||
-         corners[i].y < (int)vertical_border_ ||
+      if(corners[i].x < static_cast<int>(this->horizontal_border_) ||
+         corners[i].y < static_cast<int>(this->vertical_border_) ||
          corners[i].x >= maxw ||
          corners[i].y >= maxh) {
         continue;
@@ -142,12 +124,7 @@ void FASTCPU<use_grid>::detect(const std::vector<cv::Mat> & image_pyramid) {
       double sub_x = corners[i].x*scale;
       double sub_y = corners[i].y*scale;
       double score = corners[i].s;
-
-      if(use_grid) {
-        addFeaturePoint(sub_x,sub_y,score,l);
-      } else {
-        keypoints_.emplace_back(sub_x,sub_y,score,l);
-      }
+      this->addFeaturePoint(sub_x,sub_y,score,l);
     }
     free(corners);
   }

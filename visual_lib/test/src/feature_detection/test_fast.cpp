@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -105,8 +105,7 @@ bool TestFAST::run(void) {
   }
   // CPU
 #if ENABLE_CPU_VERSION
-  detector_cpu_.reset(new rosten::FASTCPU<false>(
-                                          image_width_,
+  detector_cpu_.reset(new rosten::FASTCPU<false>(image_width_,
                                           image_height_,
                                           CELL_SIZE_WIDTH,
                                           CELL_SIZE_HEIGHT,
@@ -198,7 +197,7 @@ bool TestFAST::run_benchmark(std::vector<vilib::Statistics> & stat_cpu,
   stat_gpu[STAT_ID_FEATURE_COUNT].add(detector_gpu_->count());
   // Display results
 #if DISPLAY_DETECTED_FEATURES_GPU
-  detector_gpu_->displayFeatureGrid("FAST detector (GPU)",image_pyramid,true,true);
+  detector_gpu_->displayFeatures("FAST detector (GPU)",image_pyramid,true,true);
 #endif /* DISPLAY_DETECTED_FEATURES_GPU */
 #else
   (void)stat_gpu;

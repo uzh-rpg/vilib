@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -42,7 +42,7 @@
 
 namespace vilib {
 
-class DetectorBaseGPU : public DetectorBase {
+class DetectorBaseGPU : public DetectorBase<true> {
 public:
   DetectorBaseGPU(const std::size_t image_width,
                   const std::size_t image_height,
@@ -51,7 +51,10 @@ public:
                   const std::size_t min_level,
                   const std::size_t max_level,
                   const std::size_t horizontal_border,
-                  const std::size_t vertical_border);
+                  const std::size_t vertical_border,
+                  // A response at (x,y) must be strictly greater than its neighborhood
+                  // otherwise it is suppressed
+                  const bool strictly_greater);
   virtual ~DetectorBaseGPU(void);
 
   void setStream(cudaStream_t stream);
@@ -99,6 +102,8 @@ protected:
   std::size_t feature_grid_bytes_;
   float * d_feature_grid_;
   float * h_feature_grid_;
+  // NMS parameters
+  bool strictly_greater_;
   // Feature grid variables
   // Host pointers
   float * h_pos_;

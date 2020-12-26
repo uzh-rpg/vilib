@@ -9,7 +9,7 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
- *  1. Redistributions of source code must retain the above copyright notice, this
+ * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 
  * 2. Redistributions in binary form must reproduce the above copyright notice,
@@ -55,6 +55,7 @@ void detector_base_gpu_grid_nms(const int image_level,
                                 const int cell_size_height,
                                 const int horizontal_cell_num,
                                 const int vertical_cell_num,
+                                const bool strictly_greater,
                                 /* pitch in bytes/sizeof(float) */
                                 const int response_pitch_elements,
                                 const float * d_response,

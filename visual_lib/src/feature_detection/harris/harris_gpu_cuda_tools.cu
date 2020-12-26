@@ -95,11 +95,11 @@ __global__ void array_multiply_kernel(const float * __restrict__ a,
                                       const int cols,
                                       const int rows,
                                       const int common_pitch) {
-  int tx = blockIdx.x * blockDim.x + threadIdx.x;
-  int ty = blockIdx.y * blockDim.y + threadIdx.y;
+  const int tx = blockIdx.x * blockDim.x + threadIdx.x;
+  const int ty = blockIdx.y * blockDim.y + threadIdx.y;
 
   if(ty < rows && tx < cols) {
-    int idx = ty * common_pitch + tx;
+    const int idx = ty * common_pitch + tx;
     if(N==1) {
       result[idx] = a[idx] * b[idx];
     } else if(N==2) {
@@ -221,8 +221,8 @@ __global__ void harris_gpu_calc_corner_response_kernel(
                                               const int minY,
                                               const int maxY,
                                               const float k) {
-  int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  const int x = blockIdx.x * blockDim.x + threadIdx.x;
+  const int y = blockIdx.y * blockDim.y + threadIdx.y;
 
   if(y <= maxY && x <= maxX && y >= minY && x >= minX) {
     /*  
@@ -270,7 +270,7 @@ __host__ void harris_gpu_calc_corner_response(const float * d_dx2,
                                               const int response_pitch,
                                               const int cols,
                                               const int rows,
-                                              conv_filter_border_type_t border_type,
+                                              const conv_filter_border_type_t border_type,
                                               const bool use_harris,
                                               const float k,
                                               cudaStream_t stream) {
@@ -281,10 +281,10 @@ __host__ void harris_gpu_calc_corner_response(const float * d_dx2,
   int threadX,threadY;
   harris_gpu_find_best_params(cols,threadX,threadY);
   kernel_params_t p = cuda_gen_kernel_params_2d(cols,rows,threadX,threadY);
-  int minX = 1 + (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
-  int maxX = (cols-2) - (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
-  int minY = 1 + (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
-  int maxY = (rows-2) - (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
+  const int minX = 1 + (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
+  const int maxX = (cols-2) - (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
+  const int minY = 1 + (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
+  const int maxY = (rows-2) - (border_type == conv_filter_border_type::BORDER_SKIP?1:0);
   decltype(&harris_gpu_calc_corner_response_kernel<false>) kernel;
   if(use_harris) {
     kernel = harris_gpu_calc_corner_response_kernel<true>;

@@ -202,11 +202,6 @@ void DetectorBaseGPU::saveResponses(const char * prefix) const {
     filename += "_l";
     filename += std::to_string(l);
     filename += ".tiff";
-#if 0
-    std::cout << "Filename: " << filename
-             << " | x: " << responses_[l_resp].width_
-             << " | y: " << responses_[l_resp].height_ << std::endl;
-#endif
     // save response image
     cv::imwrite(filename.c_str(),response);
   }

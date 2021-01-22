@@ -109,6 +109,7 @@ nvcc --version
 
 ## How to use
 
+### Compile without cmake
 1. Compile the library
 ```bash
 # Clean any previous build artifacts
@@ -151,6 +152,56 @@ CXX_LD_LIBRARIES += -lvilib
 # library folder :
 CXX_LD_FLAGS += -Wl, -rpath,<path to the directory containing the .so>
 # or modify the LD_LIBRARY_PATH environment variable
+```
+### Compile with cmake
+
+Vilib follows the standard patterns for building a cmake project:
+```bash
+# make directory at the top of the the vilib source directory:
+mkdir build
+# create make files and build the library. Adjust the install prefix to
+# match your install directory
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
+make install -j 8
+```
+
+After this, vilib can be included into another cmake project in the usual way.
+An example CMakeLists.txt file for compiling the tests that come with vilib looks like this:
+
+```
+cmake_minimum_required(VERSION 3.10)
+
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+   project(vilib-test LANGUAGES CXX CUDA)
+else()
+   project(vilib-test LANGUAGES CXX)
+endif()
+
+find_package(vilib REQUIRED)
+find_package(CUDA REQUIRED)
+# only necessary if you happen to use opencv
+find_package(OpenCV COMPONENTS core imgproc features2d highgui)
+
+message(STATUS "Found CUDA ${CUDA_VERSION_STRING} at ${CUDA_TOOLKIT_ROOT_DIR}")
+
+file(GLOB_RECURSE VILIB_TEST_SOURCES
+  src/*.cpp
+  src/*.cu
+  )
+
+add_executable(vilib_tests ${VILIB_TEST_SOURCES})
+include_directories(include)
+
+target_link_libraries(vilib_tests
+  vilib::vilib
+  opencv_core opencv_imgproc opencv_features2d opencv_highgui
+  ${CUDA_LIBRARIES})
+
+install(TARGETS vilib_tests
+  DESTINATION lib)
 ```
 
 ## Examples

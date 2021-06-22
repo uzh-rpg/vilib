@@ -33,6 +33,11 @@
 
 cmake_minimum_required(VERSION 3.10)
 
+if(DEFINED CATKIN_DEVEL_PREFIX)
+  include(cmake/catkin.cmake)
+  return()
+endif()
+
 include(CheckLanguage)
 check_language(CUDA)
 if (CMAKE_CUDA_COMPILER)

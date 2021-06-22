@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>vilib</name>
+  <version>1.0.0</version>
+  <description>Fast CUDA Feature Tracker</description>
+
+  <maintainer email="foehn@ifi.uzh.ch">foehnph</maintainer>
+
+  <license>GNU GPL</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>roscpp</depend>
+</package>

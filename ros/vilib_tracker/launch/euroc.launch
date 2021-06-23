@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 <launch>
 
-<node name="tracker" pkg="vilib" type="vilib_ros" output="screen">
+<node name="tracker" pkg="vilib" type="vilib_tracker" output="screen">
   <rosparam file="$(find vilib)/params/euroc.yaml"/>
   <remap from="tracker/image" to="/cam0/image_raw"/>
 </node>

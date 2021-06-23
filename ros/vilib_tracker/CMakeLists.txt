@@ -28,7 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 3.10)
-project(vilib VERSION 1.0.0 DESCRIPTION "fast cuda fast feature tracking" LANGUAGES CXX CUDA)
+project(vilib_tracker VERSION 1.0.0 DESCRIPTION "Fast CUDA Feature Tracker" LANGUAGES CXX CUDA)
 
 # Packages
 find_package(catkin_simple REQUIRED)
@@ -36,10 +36,8 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
 
-set(CUDA_ARCHITECTURES "52;62")
-
 # Setup catkin simple
-catkin_simple()
+catkin_simple(ALL_DEPS_REQUIRED)
 
 if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "armv7l")
   message(STATUS "Using ARMv7 optimized flags!")
@@ -50,7 +48,7 @@ elseif ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
   set(VILIB_ARCH_FLAGS "-march=native")
   add_definitions(-D__ARM_NEON__)
 else ()
-  set(VILIB_ARCH_FLAGS " -march=native")
+  set(VILIB_ARCH_FLAGS "-march=native")
 endif ()
 
 set(cxx_options
@@ -68,7 +66,8 @@ set(cxx_options
   -fno-signed-zeros
   -fno-math-errno
   -funroll-loops
-  -fno-finite-math-only)
+  -fno-finite-math-only
+)
 
 set(nvcc_options
   ${VILIB_ARCH_FLAGS}
@@ -83,11 +82,11 @@ set(nvcc_options
   --default-stream per-thread
 )
 
-SET(CUDA_VERBOSE_BUILD ON CACHE BOOL "nvcc verbose" FORCE)
 get_filename_component(VILIB_PATH ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
-set(VILIB_PATH "${VILIB_PATH}/visual_lib")
+set(VILIB_PATH "${VILIB_PATH}/../visual_lib")
 include_directories(${VILIB_PATH}/include)
 include_directories(BEFORE SYSTEM ${EIGEN3_INCLUDE_DIRS})
+include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 file(GLOB_RECURSE VILIB_SOURCES
   ${VILIB_PATH}/src/*.cpp
@@ -102,10 +101,8 @@ file(GLOB_RECURSE VILIB_SOURCES
 )
 
 cuda_add_library(vilib SHARED ${VILIB_SOURCES})
-target_include_directories(vilib PUBLIC
-    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
-)
 
+set_target_properties(vilib PROPERTIES CUDA_ARCHITECTURES "52;62")
 
 target_link_libraries(vilib
   opencv_core
@@ -115,35 +112,22 @@ target_link_libraries(vilib
   Eigen3::Eigen
   ${CUDA_LIBRARIES}
 )
+
 target_compile_options(vilib PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${cxx_options}>
   $<$<COMPILE_LANGUAGE:CUDA>:${nvcc_options}>
 )
 
-cs_add_executable(vilib_ros
+cs_add_executable(vilib_tracker
   src/vilib_ros.cpp
   src/vilib_params.cpp
 )
-target_compile_options(vilib_ros PRIVATE
+
+target_compile_options(vilib_tracker PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${cxx_options}>
-  $<$<COMPILE_LANGUAGE:CUDA>:${nvcc_options}>
 )
-# target_compile_options(vilib_ros PRIVATE
-# -fno-finite-math-only
-# -Wall
-# -Werror
-# -Wpedantic
-# -Wunused
-# -Wundef
-# -Wcast-align
-# -Wredundant-decls
-# -Wodr
-# -Wunreachable-code
-# -Wno-overloaded-virtual
-# )
-target_link_libraries(vilib_ros vilib)
 
-
+target_link_libraries(vilib_tracker vilib ${catkin_LIBRARIES})
 
 # Finish catkin simple
 cs_install()

@@ -30,16 +30,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vilib/vilib_ros.hpp"
+#include "vilib_tracker/vilib_ros.hpp"
 
 #include <ros/ros.h>
 
 #include <unordered_map>
 
-#include "vilib/Features.h"
 #include "vilib/common/frame.h"
 #include "vilib/common/framebundle.h"
 #include "vilib/storage/pyramid_pool.h"
+#include "vilib_msgs/Features.h"
 
 
 namespace vilib {
@@ -59,7 +59,7 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   image_sub_ = it_.subscribe("image", 10, &VilibRos::imageCallback, this);
   if (params_.publish_debug_image)
     image_pub_ = it_.advertise("debug_image", 1, false);
-  features_pub_ = nh_.advertise<Features>("features", 1);
+  features_pub_ = nh_.advertise<vilib_msgs::Features>("features", 1);
 
   PyramidPool::init(1, params_.image_width, params_.image_height, 1,
                     params_.numberOfPyramidLevels(), IMAGE_PYRAMID_MEMORY_TYPE);
@@ -147,11 +147,11 @@ void VilibRos::publishFeatures(const ros::Time &frame_time,
   const Eigen::Matrix<double, 2, Eigen::Dynamic> features = frame->px_vec_;
   const Eigen::VectorXi ids = frame->track_id_vec_;
 
-  Features features_msg;
+  vilib_msgs::Features features_msg;
   features_msg.header.stamp = frame_time;
   features_msg.features.reserve(frame->num_features_);
   for (int i = 0; i < (int)frame->num_features_; ++i) {
-    Feature feature;
+    vilib_msgs::Feature feature;
     feature.id = ids(i);
     feature.x = features(0, i);
     feature.y = features(1, i);

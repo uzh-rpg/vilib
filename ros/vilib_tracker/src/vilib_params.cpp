@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vilib/vilib_params.hpp"
+#include "vilib_tracker/vilib_params.hpp"
 
 namespace vilib {
 

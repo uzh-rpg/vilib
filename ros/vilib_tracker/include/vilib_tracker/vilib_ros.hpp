@@ -46,10 +46,10 @@
 #include "vilib/feature_detection/fast/fast_gpu.h"
 #include "vilib/feature_detection/harris/harris_gpu.h"
 #include "vilib/feature_tracker/feature_tracker_gpu.h"
-#include "vilib/logger.hpp"
-#include "vilib/statistic.hpp"
-#include "vilib/timer.hpp"
-#include "vilib/vilib_params.hpp"
+#include "vilib_tracker/logger.hpp"
+#include "vilib_tracker/statistic.hpp"
+#include "vilib_tracker/timer.hpp"
+#include "vilib_tracker/vilib_params.hpp"
 
 namespace vilib {
 

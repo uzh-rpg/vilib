@@ -43,6 +43,10 @@ set(VILIB_PATH "${VILIB_PATH}/visual_lib")
 # Setup catkin simple
 catkin_simple()
 
+add_compile_options(-std=c++17)
+add_compile_options(-march=native)
+add_compile_options(-O3)
+
 include_directories(${VILIB_PATH}/include)
 include_directories(BEFORE SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
@@ -62,6 +66,27 @@ add_library(vilib SHARED ${VILIB_SOURCES})
 target_include_directories(vilib PUBLIC
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
+target_compile_options(vilib PRIVATE
+  # NVCC options
+  --device-w
+  --ftz=true
+  --prec-div=false
+  --prec-sqrt=false 
+  --fmad=true
+  --default-stream per-thread
+  # CXX options
+  -Wall
+  -Wextra
+  -Werror
+  -Wfatal-errors
+  -ffast-math
+  -fsee
+  -fno-signed-zeros
+  -fno-math-errno
+  -funroll-loops
+  -fno-finite-math-only
+)
+
 target_link_libraries(vilib PUBLIC
   opencv_core
   opencv_imgproc
@@ -74,6 +99,19 @@ target_link_libraries(vilib PUBLIC
 cs_add_executable(vilib_ros
   src/vilib_ros.cpp
   src/vilib_params.cpp
+)
+target_compile_options(vilib_ros PRIVATE
+  -fno-finite-math-only
+  -Wall
+  -Werror
+  -Wpedantic
+  -Wunused
+  -Wundef
+  -Wcast-align
+  -Wredundant-decls
+  -Wodr
+  -Wunreachable-code
+  -Wno-overloaded-virtual
 )
 target_link_libraries(vilib_ros vilib)
 

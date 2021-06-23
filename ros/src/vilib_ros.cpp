@@ -46,9 +46,9 @@ namespace vilib {
 
 
 VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
-  : params_(pnh), nh_(nh), pnh_(pnh), it_(pnh_) {
+  : nh_(nh), pnh_(pnh), it_(pnh_), params_(pnh) {
   if (!params_.valid()) {
-    ROS_ERROR("Could not load valid parameter set!");
+    logger_.error("Could not load valid parameter set!");
     ros::shutdown();
   }
 
@@ -78,6 +78,7 @@ VilibRos::~VilibRos() {
   }
 
   PyramidPool::deinit();
+  logger_ << '\n' << timer_frame_ << stats_tracked_ << stats_detected_;
 }
 
 void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
@@ -120,10 +121,12 @@ void VilibRos::processThread() {
       std::shared_ptr<FrameBundle> frame_bundle = std::make_shared<FrameBundle>(
         std::vector<std::shared_ptr<Frame>>({frame}));
 
-      timer_tracking_.tic();
       size_t n_tracked, n_detected;
+      timer_tracking_.tic();
       feature_tracker_->track(frame_bundle, n_tracked, n_detected);
       timer_tracking_.toc();
+      stats_tracked_ << (double)n_tracked;
+      stats_detected_ << (double)n_detected;
 
       publishFeatures(frame_time, frame);
 

@@ -93,8 +93,8 @@ class VilibRos {
 
   // Logging and Statistics
   Logger logger_{"Vilib"};
-  Statistic<double> stats_tracked_;
-  Statistic<double> stats_detected_;
+  Statistic<double> stats_tracked_{"Tracked Features"};
+  Statistic<double> stats_detected_{"Detected Features"};
   Timer<double> timer_frame_{"Frame Processing"};
   Timer<double> timer_copy_{"Copy"};
   Timer<double> timer_tracking_{"Tracking"};

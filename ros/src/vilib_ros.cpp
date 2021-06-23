@@ -56,7 +56,7 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   timer_frame_.nest(timer_tracking_);
   timer_frame_.nest(timer_visualize_);
 
-  image_sub_ = it_.subscribe("image", 1, &VilibRos::imageCallback, this);
+  image_sub_ = it_.subscribe("image", 10, &VilibRos::imageCallback, this);
   if (params_.publish_debug_image)
     image_pub_ = it_.advertise("debug_image", 1, false);
   features_pub_ = nh_.advertise<Features>("features", 1);
@@ -150,7 +150,7 @@ void VilibRos::publishFeatures(const ros::Time &frame_time,
   Features features_msg;
   features_msg.header.stamp = frame_time;
   features_msg.features.reserve(frame->num_features_);
-  for (int i = 0; i < frame->num_features_; ++i) {
+  for (int i = 0; i < (int)frame->num_features_; ++i) {
     Feature feature;
     feature.id = ids(i);
     feature.x = features(0, i);
@@ -180,7 +180,7 @@ void VilibRos::visualize(const std::shared_ptr<Frame> &frame,
 
   const Eigen::Matrix<double, 2, Eigen::Dynamic> features = frame->px_vec_;
   const Eigen::VectorXi ids = frame->track_id_vec_;
-  for (int i = 0; i < frame->num_features_; ++i) {
+  for (int i = 0; i < (int)frame->num_features_; ++i) {
     const int track_id = ids(i);
     if (max_track_id < track_id) {
       max_track_id = track_id;

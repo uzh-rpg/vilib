@@ -64,3 +64,4 @@ feature_detector:
   #   arc_length:       10
   #   # available score types: [ sum_of_abs_diff_all, sum_of_abs_diff_on_arc, max_threshold]
   #   score:            "sum_of_abs_diff_on_arc"
+

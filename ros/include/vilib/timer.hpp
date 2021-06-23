@@ -35,8 +35,8 @@
 #include <chrono>
 #include <regex>
 
-#include "effortless/logger.hpp"
-#include "effortless/statistic.hpp"
+#include "vilib/logger.hpp"
+#include "vilib/statistic.hpp"
 
 namespace vilib {
 

@@ -36,6 +36,7 @@
 
 #include <unordered_map>
 
+#include "vilib/Features.h"
 #include "vilib/common/frame.h"
 #include "vilib/common/framebundle.h"
 #include "vilib/storage/pyramid_pool.h"
@@ -53,10 +54,12 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
 
   timer_frame_.nest(timer_copy_);
   timer_frame_.nest(timer_tracking_);
-  timer_frame_.nest(timer_visualization_);
+  timer_frame_.nest(timer_visualize_);
 
   image_sub_ = it_.subscribe("image", 1, &VilibRos::imageCallback, this);
-  image_pub_ = it_.advertise("debug_image", 1, false);
+  if (params_.publish_debug_image)
+    image_pub_ = it_.advertise("debug_image", 1, false);
+  features_pub_ = nh_.advertise<Features>("features", 1);
 
   PyramidPool::init(1, params_.image_width, params_.image_height, 1,
                     params_.numberOfPyramidLevels(), IMAGE_PYRAMID_MEMORY_TYPE);
@@ -78,10 +81,9 @@ VilibRos::~VilibRos() {
 }
 
 void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
-  const cv_bridge::CvImagePtr image = cv_bridge::toCvCopy(msg, "mono8");
   {
     std::lock_guard<std::mutex> guard(image_queue_mtx_);
-    image_queue_.push(image->image);
+    image_queue_.push(cv_bridge::toCvCopy(msg, "mono8"));
   }
   image_cv_.notify_all();
 }
@@ -99,15 +101,18 @@ void VilibRos::processThread() {
     while (true) {
       timer_frame_.tic();
       static std::shared_ptr<Frame> frame;
+      ros::Time frame_time;
       {
         std::lock_guard<std::mutex> guard(image_queue_mtx_);
         if (image_queue_.empty()) break;
         timer_copy_.tic();
-        frame = std::make_shared<Frame>(image_queue_.front(), 0,
+        frame = std::make_shared<Frame>(image_queue_.front()->image, 0,
                                         params_.numberOfPyramidLevels());
+        frame_time = image_queue_.front()->header.stamp;
 
         if (params_.publish_debug_image)
-          cv::cvtColor(image_queue_.front(), debug_image.image, CV_GRAY2BGR);
+          cv::cvtColor(image_queue_.front()->image, debug_image.image,
+                       CV_GRAY2BGR);
         timer_copy_.toc();
         image_queue_.pop();
       }
@@ -120,9 +125,11 @@ void VilibRos::processThread() {
       feature_tracker_->track(frame_bundle, n_tracked, n_detected);
       timer_tracking_.toc();
 
+      publishFeatures(frame_time, frame);
+
       if (params_.publish_debug_image) {
         timer_visualize_.tic();
-        debug_image.header.stamp = ros::Time::now();
+        debug_image.header.stamp = frame_time;
         visualize(frame, debug_image.image);
         image_pub_.publish(debug_image.toImageMsg());
         timer_visualize_.toc();
@@ -132,11 +139,26 @@ void VilibRos::processThread() {
   }
 }
 
+void VilibRos::publishFeatures(const ros::Time &frame_time,
+                               const std::shared_ptr<Frame> &frame) const {
+  const Eigen::Matrix<double, 2, Eigen::Dynamic> features = frame->px_vec_;
+  const Eigen::VectorXi ids = frame->track_id_vec_;
+
+  Features features_msg;
+  features_msg.header.stamp = frame_time;
+  features_msg.features.reserve(frame->num_features_);
+  for (int i = 0; i < frame->num_features_; ++i) {
+    Feature feature;
+    feature.id = ids(i);
+    feature.x = features(0, i);
+    feature.y = features(1, i);
+    features_msg.features.push_back(feature);
+  }
+  features_pub_.publish(features_msg);
+}
+
 void VilibRos::visualize(const std::shared_ptr<Frame> &frame,
                          cv::Mat &image) const {
-  static int last_track_id = -1;
-  static std::unordered_map<int, cv::Scalar> track_colors;
-
   const int cw = params_.cell_width;
   const int ch = params_.cell_height;
   const int n_rows = (image.rows + ch - 1) / ch;
@@ -150,26 +172,20 @@ void VilibRos::visualize(const std::shared_ptr<Frame> &frame,
     }
   }
 
-  // note: id-s start from 0
+  static int max_track_id = -1;
+  static std::unordered_map<int, cv::Scalar> track_colors;
+
+  const Eigen::Matrix<double, 2, Eigen::Dynamic> features = frame->px_vec_;
+  const Eigen::VectorXi ids = frame->track_id_vec_;
   for (int i = 0; i < frame->num_features_; ++i) {
-    const Eigen::Matrix<int, 1, 2> pos = frame->px_vec_.col(i).cast<int>();
-
-    const int track_id = frame->track_id_vec_[i];
-
-    cv::Scalar track_color(255, 255, 255);
-    if (last_track_id < track_id) {
+    const int track_id = ids(i);
+    if (max_track_id < track_id) {
+      max_track_id = track_id;
       track_colors[track_id] =
         cv::Scalar(rand() % 255, rand() % 255, rand() % 255);
-    } else {
-      track_color = track_colors[track_id];
     }
-
-    cv::circle(image, cv::Point(pos.x(), pos.y()), 3, track_color, 3, 8);
-  }
-  // update the highest track id
-  if (frame->num_features_ > 0 &&
-      frame->track_id_vec_[frame->num_features_ - 1] > last_track_id) {
-    last_track_id = frame->track_id_vec_[frame->num_features_ - 1];
+    cv::circle(image, cv::Point(features(0, i), features(1, i)), 3,
+               track_colors[track_id], 3, 8);
   }
 }
 

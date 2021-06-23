@@ -63,6 +63,8 @@ class VilibRos {
 
  private:
   void processThread();
+  void publishFeatures(const ros::Time &frame_time,
+                       const std::shared_ptr<Frame> &frame) const;
   void visualize(const std::shared_ptr<Frame> &frame, cv::Mat &image) const;
 
   // ROS
@@ -72,11 +74,12 @@ class VilibRos {
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
+  ros::Publisher features_pub_;
 
   VilibParams params_;
 
   // Image Queue
-  std::queue<cv::Mat> image_queue_;
+  std::queue<cv_bridge::CvImageConstPtr> image_queue_;
   std::mutex image_queue_mtx_;
   std::condition_variable image_cv_;
 

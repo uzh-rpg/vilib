@@ -28,39 +28,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-image_width:    752
-image_height:   480
+Header header
 
-n_cameras: 1
-publish_debug_image: true
-
-feature_tracker:
-  reset_before_detection:                 false
-  use_best_n_features:                    64
-  min_tracks_to_detect_new_features:      60
-  affine_est_gain:                        false
-  affine_est_offset:                      false
-
-
-feature_detector:
-  cell_width:         32
-  cell_height:        32
-  min_level:          0
-  max_level:          2
-  horizontal_border:  8
-  vertical_border:    8
-  
-  harris:
-    # available border types: [skip, zero, replicate, reflect, wrap, reflect_101]
-    border_type:     "skip"
-    harris_k:         0.04
-    quality_level:    0.1
-  
-  # shitomasi:
-  #   quality_level:    0.1
-
-  # fast:
-  #   epsilon:          10.0
-  #   arc_length:       10
-  #   # available score types: [ sum_of_abs_diff_all, sum_of_abs_diff_on_arc, max_threshold]
-  #   score:            "sum_of_abs_diff_on_arc"
+Feature[] features

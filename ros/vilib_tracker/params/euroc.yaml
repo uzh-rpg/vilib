@@ -32,15 +32,22 @@ image_width:    752
 image_height:   480
 
 n_cameras: 1
-publish_debug_image: true
+
+# Print tracking stats and timings:
+# log_stats < 0:  print on close (default)
+# log_stats = 0:  disabled
+# log_stats > 0:  print every nth frame
+log_stats: -1
+
+# Publish image with painted features, has large negative impact on runtime.
+publish_debug_image: false
 
 feature_tracker:
   reset_before_detection:                 false
-  use_best_n_features:                    32
-  min_tracks_to_detect_new_features:      16
+  use_best_n_features:                    64
+  min_tracks_to_detect_new_features:      60
   affine_est_gain:                        false
   affine_est_offset:                      false
-
 
 feature_detector:
   cell_width:         32

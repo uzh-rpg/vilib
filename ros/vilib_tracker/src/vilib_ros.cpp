@@ -72,7 +72,7 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
 
 VilibRos::~VilibRos() {
   PyramidPool::deinit();
-  logger_ << '\n' << timer_frame_ << stats_tracked_ << stats_detected_;
+  if(params_.log_stats < 0) printStats();
 }
 
 void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
@@ -99,17 +99,12 @@ void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
   if (params_.publish_debug_image) {
     timer_visualize_.tic();
     cv_bridge::CvImagePtr debug_image = cv_bridge::toCvCopy(msg, "bgr8");
-    //     static cv_bridge::CvImage debug_image = [&](){
-    //       cv_bridge::CvImage tmp;
-    //       tmp.image = cv::Mat(params_.image_height, params_.image_width,
-    //       CV_8UC3); tmp.encoding = "bgr8"; return tmp;
-    //     }();
-    //     cv::cvtColor(image->image, debug_image.image, CV_GRAY2BGR);
-    //     debug_image.header.stamp = image->header.stamp;
     visualize(frame, debug_image->image);
     image_pub_.publish(debug_image->toImageMsg());
     timer_visualize_.toc();
   }
+
+  if(params_.log_stats > 1) printStats();
   timer_frame_.toc();
 }
 
@@ -161,6 +156,10 @@ void VilibRos::visualize(const std::shared_ptr<Frame> &frame,
     cv::circle(image, cv::Point(features(0, i), features(1, i)), 3,
                track_colors[track_id], 3, 8);
   }
+}
+
+void VilibRos::printStats() const {
+  logger_ << '\n' << timer_frame_ << stats_tracked_ << stats_detected_;
 }
 
 }  // namespace vilib

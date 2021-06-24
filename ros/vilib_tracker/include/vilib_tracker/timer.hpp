@@ -112,7 +112,7 @@ class Timer : public Statistic<T> {
 
     ss << std::left << std::setw(name_width) << this->name_;
     if (percentage >= 0) ss << std::right << std::setw(2) << percentage << "%";
-    ss << std::right << std::setw(5) << this->n_ << "  calls   "
+    ss << std::right << std::setw(6) << this->n_ << " calls   "
        << "mean|std: ";
     ss << std::right << std::setw(8) << 1000 * this->mean_ << " | ";
     ss << std::left << std::setw(8) << 1000 * this->S_ << "  [min|max:  ";

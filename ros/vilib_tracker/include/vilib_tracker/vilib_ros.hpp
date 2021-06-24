@@ -61,6 +61,7 @@ class VilibRos {
   void publishFeatures(const ros::Time &frame_time,
                        const std::shared_ptr<Frame> &frame) const;
   void visualize(const std::shared_ptr<Frame> &frame, cv::Mat &image) const;
+  void printStats() const;
 
   // ROS
   ros::NodeHandle nh_;

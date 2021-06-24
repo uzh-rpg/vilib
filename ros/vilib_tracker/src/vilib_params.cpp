@@ -75,6 +75,7 @@ bool VilibParams::load(const ros::NodeHandle &pnh) {
   if (!check) ROS_ERROR("Could not load image size!");
 
   pnh.getParam("n_cameras", n_cameras);
+  pnh.getParam("log_stats", log_stats);
   pnh.getParam("publish_debug_image", publish_debug_image);
 
   // Feature Tracker

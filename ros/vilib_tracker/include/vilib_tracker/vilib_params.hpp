@@ -101,6 +101,7 @@ struct VilibParams {
 
   int n_cameras{1};
 
+  int log_stats{-1};
   bool publish_debug_image{false};
 
   FeatureTrackerOptions feature_tracker_options;

@@ -103,11 +103,12 @@ class Statistic {
     const std::streamsize prec = os.precision();
     os.precision(3);
 
-    os << std::left << std::setw(30) << s.name_ << "mean|std  ";
-    os << std::left << std::setw(5) << s.mean() << "|";
-    os << std::left << std::setw(5) << s.std() << "  [min|max:  ";
-    os << std::left << std::setw(5) << s.min() << "|";
-    os << std::left << std::setw(5) << s.max() << "]" << std::endl;
+    os << std::left << std::setw(30) << s.name_;
+    os << std::right << std::setw(6) << s.count() << " calls   mean|std  ";
+    os << std::right << std::setw(8) << s.mean() << " | ";
+    os << std::left << std::setw(8) << s.std() << "  [min|max:  ";
+    os << std::right << std::setw(8) << s.min() << " | ";
+    os << std::left << std::setw(8) << s.max() << "]" << std::endl;
 
     os.precision(prec);
     return os;

@@ -35,7 +35,7 @@ project(vilib_catkin
 )
 
 # Package Dependencies
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS sensor_msgs)
 find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
@@ -43,9 +43,6 @@ find_package(CUDA REQUIRED)
 # Include directories
 get_filename_component(VILIB_PATH ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 set(VILIB_PATH "${VILIB_PATH}/../visual_lib")
-# include_directories(${VILIB_PATH}/include)
-# include_directories(BEFORE SYSTEM ${EIGEN3_INCLUDE_DIRS})
-# include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 # Catkin Package Setup
 catkin_package(
@@ -54,6 +51,7 @@ catkin_package(
   ${EIGEN3_INCLUDE_DIRS}
   ${CUDA_TOOLKIT_INCLUDE}
   LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS sensor_msgs
 )
 
 # Compile Flags
@@ -74,6 +72,7 @@ set(VILIB_CXX_FLAGS
   -std=c++17
   -O3
   -DNDEBUG
+  -DROS_SUPPORT
   -Wall
   -Wextra
   -Werror
@@ -92,6 +91,7 @@ set(VILIB_NVCC_FLAGS
   -std=c++11
   -O3
   -DNDEBUG
+  -DROS_SUPPORT
   --device-w
   --ftz=true
   --prec-div=false
@@ -119,6 +119,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${VILIB_PATH}/include
   ${EIGEN3_INCLUDE_DIRS}
   ${CUDA_TOOLKIT_INCLUDE}
+  ${catkin_INCLUDE_DIRS}
 )
 
 set_target_properties(${PROJECT_NAME}
@@ -132,6 +133,7 @@ target_link_libraries(${PROJECT_NAME}
   opencv_features2d
   Eigen3::Eigen
   ${CUDA_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 target_compile_options(${PROJECT_NAME} PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${VILIB_CXX_FLAGS}>

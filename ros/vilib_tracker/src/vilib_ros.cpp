@@ -79,11 +79,10 @@ void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
   timer_frame_.tic();
 
   timer_copy_.tic();
-  cv_bridge::CvImageConstPtr image = cv_bridge::toCvShare(msg, "mono8");
-  const std::shared_ptr<Frame> frame = std::make_shared<Frame>(image->image, 0,
-                                        params_.numberOfPyramidLevels());
-  const std::shared_ptr<FrameBundle> frame_bundle = std::make_shared<FrameBundle>(
-        std::vector<std::shared_ptr<Frame>>({frame}));
+  const std::shared_ptr<Frame> frame =
+    std::make_shared<Frame>(msg, params_.numberOfPyramidLevels());
+  const std::shared_ptr<FrameBundle> frame_bundle =
+    std::make_shared<FrameBundle>(std::vector<std::shared_ptr<Frame>>({frame}));
   timer_copy_.toc();
 
   timer_tracking_.tic();
@@ -94,21 +93,21 @@ void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
   timer_tracking_.toc();
 
   timer_publish_.tic();
-  publishFeatures(image->header.stamp, frame);
+  publishFeatures(msg->header.stamp, frame);
   timer_publish_.toc();
 
-  if(params_.publish_debug_image) {
+  if (params_.publish_debug_image) {
     timer_visualize_.tic();
-    static cv_bridge::CvImage debug_image = [&](){
-      cv_bridge::CvImage tmp;
-      tmp.image = cv::Mat(params_.image_height, params_.image_width, CV_8UC3);
-      tmp.encoding = "bgr8";
-      return tmp;
-    }();
-    cv::cvtColor(image->image, debug_image.image, CV_GRAY2BGR);
-    debug_image.header.stamp = image->header.stamp;
-    visualize(frame, debug_image.image);
-    image_pub_.publish(debug_image.toImageMsg());
+    cv_bridge::CvImagePtr debug_image = cv_bridge::toCvCopy(msg, "bgr8");
+    //     static cv_bridge::CvImage debug_image = [&](){
+    //       cv_bridge::CvImage tmp;
+    //       tmp.image = cv::Mat(params_.image_height, params_.image_width,
+    //       CV_8UC3); tmp.encoding = "bgr8"; return tmp;
+    //     }();
+    //     cv::cvtColor(image->image, debug_image.image, CV_GRAY2BGR);
+    //     debug_image.header.stamp = image->header.stamp;
+    visualize(frame, debug_image->image);
+    image_pub_.publish(debug_image->toImageMsg());
     timer_visualize_.toc();
   }
   timer_frame_.toc();

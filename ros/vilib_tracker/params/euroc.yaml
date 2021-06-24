@@ -32,7 +32,7 @@ image_width:    752
 image_height:   480
 
 n_cameras: 1
-publish_debug_image: false
+publish_debug_image: true
 
 feature_tracker:
   reset_before_detection:                 false

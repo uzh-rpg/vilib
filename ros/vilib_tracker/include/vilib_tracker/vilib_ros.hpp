@@ -37,11 +37,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 
-#include <condition_variable>
 #include <memory>
-#include <mutex>
-#include <queue>
-#include <thread>
 
 #include "vilib/feature_detection/fast/fast_gpu.h"
 #include "vilib/feature_detection/harris/harris_gpu.h"
@@ -62,7 +58,6 @@ class VilibRos {
   void imageCallback(const sensor_msgs::ImageConstPtr &msg);
 
  private:
-  void processThread();
   void publishFeatures(const ros::Time &frame_time,
                        const std::shared_ptr<Frame> &frame) const;
   void visualize(const std::shared_ptr<Frame> &frame, cv::Mat &image) const;
@@ -78,18 +73,9 @@ class VilibRos {
 
   VilibParams params_;
 
-  // Image Queue
-  std::queue<cv_bridge::CvImageConstPtr> image_queue_;
-  std::mutex image_queue_mtx_;
-  std::condition_variable image_cv_;
-
   // Vilib
   std::shared_ptr<FeatureTrackerGPU> feature_tracker_;
   std::shared_ptr<DetectorBaseGPU> feature_detector_;
-
-  // Thread
-  bool shutdown_ = false;
-  std::thread process_thread_;
 
   // Logging and Statistics
   Logger logger_{"Vilib"};
@@ -98,6 +84,7 @@ class VilibRos {
   Timer<double> timer_frame_{"Frame Processing"};
   Timer<double> timer_copy_{"Copy"};
   Timer<double> timer_tracking_{"Tracking"};
+  Timer<double> timer_publish_{"Publishing"};
   Timer<double> timer_visualize_{"Visualize"};
 };
 

@@ -54,12 +54,13 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
 
   timer_frame_.nest(timer_copy_);
   timer_frame_.nest(timer_tracking_);
+  timer_frame_.nest(timer_publish_);
   timer_frame_.nest(timer_visualize_);
 
-  image_sub_ = it_.subscribe("image", 10, &VilibRos::imageCallback, this);
+  image_sub_ = it_.subscribe("image", 20, &VilibRos::imageCallback, this);
   if (params_.publish_debug_image)
     image_pub_ = it_.advertise("debug_image", 1, false);
-  features_pub_ = nh_.advertise<vilib_msgs::Features>("features", 1);
+  features_pub_ = nh_.advertise<vilib_msgs::Features>("features", 10);
 
   PyramidPool::init(1, params_.image_width, params_.image_height, 1,
                     params_.numberOfPyramidLevels(), IMAGE_PYRAMID_MEMORY_TYPE);
@@ -67,79 +68,50 @@ VilibRos::VilibRos(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   feature_tracker_ = params_.createFeatureTracker();
   feature_detector_ = params_.createFeatureDetector();
   feature_tracker_->setDetectorGPU(feature_detector_, 0);
-
-  process_thread_ = std::thread(&VilibRos::processThread, this);
 }
 
 VilibRos::~VilibRos() {
-  if (process_thread_.joinable()) {
-    shutdown_ = true;
-    process_thread_.join();
-  }
-
   PyramidPool::deinit();
   logger_ << '\n' << timer_frame_ << stats_tracked_ << stats_detected_;
 }
 
 void VilibRos::imageCallback(const sensor_msgs::ImageConstPtr &msg) {
-  {
-    std::lock_guard<std::mutex> guard(image_queue_mtx_);
-    image_queue_.push(cv_bridge::toCvCopy(msg, "mono8"));
-  }
-  image_cv_.notify_all();
-}
+  timer_frame_.tic();
 
-void VilibRos::processThread() {
-  std::mutex mtx;
-  cv_bridge::CvImage debug_image;
-  debug_image.image =
-    cv::Mat(params_.image_height, params_.image_width, CV_8UC3);
-  debug_image.encoding = "bgr8";
-  while (ros::ok() || !shutdown_) {
-    std::unique_lock<std::mutex> lock(mtx);
-    image_cv_.wait_for(lock, std::chrono::milliseconds(100));
-
-    while (true) {
-      timer_frame_.tic();
-      static std::shared_ptr<Frame> frame;
-      ros::Time frame_time;
-      {
-        std::lock_guard<std::mutex> guard(image_queue_mtx_);
-        if (image_queue_.empty()) break;
-        timer_copy_.tic();
-        frame = std::make_shared<Frame>(image_queue_.front()->image, 0,
+  timer_copy_.tic();
+  cv_bridge::CvImageConstPtr image = cv_bridge::toCvShare(msg, "mono8");
+  const std::shared_ptr<Frame> frame = std::make_shared<Frame>(image->image, 0,
                                         params_.numberOfPyramidLevels());
-        frame_time = image_queue_.front()->header.stamp;
-
-        if (params_.publish_debug_image)
-          cv::cvtColor(image_queue_.front()->image, debug_image.image,
-                       CV_GRAY2BGR);
-        timer_copy_.toc();
-        image_queue_.pop();
-      }
-
-      std::shared_ptr<FrameBundle> frame_bundle = std::make_shared<FrameBundle>(
+  const std::shared_ptr<FrameBundle> frame_bundle = std::make_shared<FrameBundle>(
         std::vector<std::shared_ptr<Frame>>({frame}));
+  timer_copy_.toc();
 
-      size_t n_tracked, n_detected;
-      timer_tracking_.tic();
-      feature_tracker_->track(frame_bundle, n_tracked, n_detected);
-      timer_tracking_.toc();
-      stats_tracked_ << (double)n_tracked;
-      stats_detected_ << (double)n_detected;
+  timer_tracking_.tic();
+  size_t n_tracked, n_detected;
+  feature_tracker_->track(frame_bundle, n_tracked, n_detected);
+  stats_tracked_ << (double)n_tracked;
+  stats_detected_ << (double)n_detected;
+  timer_tracking_.toc();
 
-      publishFeatures(frame_time, frame);
+  timer_publish_.tic();
+  publishFeatures(image->header.stamp, frame);
+  timer_publish_.toc();
 
-      if (params_.publish_debug_image) {
-        timer_visualize_.tic();
-        debug_image.header.stamp = frame_time;
-        visualize(frame, debug_image.image);
-        image_pub_.publish(debug_image.toImageMsg());
-        timer_visualize_.toc();
-      }
-      timer_frame_.toc();
-    }
+  if(params_.publish_debug_image) {
+    timer_visualize_.tic();
+    static cv_bridge::CvImage debug_image = [&](){
+      cv_bridge::CvImage tmp;
+      tmp.image = cv::Mat(params_.image_height, params_.image_width, CV_8UC3);
+      tmp.encoding = "bgr8";
+      return tmp;
+    }();
+    cv::cvtColor(image->image, debug_image.image, CV_GRAY2BGR);
+    debug_image.header.stamp = image->header.stamp;
+    visualize(frame, debug_image.image);
+    image_pub_.publish(debug_image.toImageMsg());
+    timer_visualize_.toc();
   }
+  timer_frame_.toc();
 }
 
 void VilibRos::publishFeatures(const ros::Time &frame_time,

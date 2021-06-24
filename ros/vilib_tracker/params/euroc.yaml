@@ -32,12 +32,12 @@ image_width:    752
 image_height:   480
 
 n_cameras: 1
-publish_debug_image: true
+publish_debug_image: false
 
 feature_tracker:
   reset_before_detection:                 false
-  use_best_n_features:                    64
-  min_tracks_to_detect_new_features:      60
+  use_best_n_features:                    32
+  min_tracks_to_detect_new_features:      16
   affine_est_gain:                        false
   affine_est_offset:                      false
 

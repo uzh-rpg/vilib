@@ -28,42 +28,32 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 cmake_minimum_required(VERSION 3.10)
-project(vilib_tracker
+project(vilib_catkin
   VERSION 1.0.0
   DESCRIPTION "Fast CUDA Feature Tracker"
-  LANGUAGES CXX
+  LANGUAGES CXX CUDA
 )
 
 # Package Dependencies
-find_package(catkin REQUIRED
-  COMPONENTS
-  vilib_msgs
-  vilib_catkin
-  cv_bridge
-  image_transport
-  roscpp
-)
-
-# find_package(Eigen3 REQUIRED)
-# find_package(OpenCV REQUIRED)
-# find_package(CUDA REQUIRED)
+find_package(catkin REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(CUDA REQUIRED)
 
 # Include directories
-# get_filename_component(VILIB_PATH ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
-# set(VILIB_PATH "${VILIB_PATH}/../visual_lib")
+get_filename_component(VILIB_PATH ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
+set(VILIB_PATH "${VILIB_PATH}/../visual_lib")
 # include_directories(${VILIB_PATH}/include)
 # include_directories(BEFORE SYSTEM ${EIGEN3_INCLUDE_DIRS})
 # include_directories(${CUDA_TOOLKIT_INCLUDE})
 
 # Catkin Package Setup
 catkin_package(
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS
-  vilib_msgs
-  vilib_catkin
-  cv_bridge
-  image_transport
-  roscpp
+  INCLUDE_DIRS
+  ${VILIB_PATH}/include
+  ${EIGEN3_INCLUDE_DIRS}
+  ${CUDA_TOOLKIT_INCLUDE}
+  LIBRARIES ${PROJECT_NAME}
 )
 
 # Compile Flags
@@ -97,71 +87,58 @@ set(VILIB_CXX_FLAGS
   -fno-finite-math-only
 )
 
-# set(nvcc_options
-#  ${VILIB_ARCH_FLAGS}
-#  -std=c++11
-#  -O3
-#  -DNDEBUG
-#  --device-w
-#  --ftz=true
-#  --prec-div=false
-#  --prec-sqrt=false
-#  --fmad=true
-#  --default-stream per-thread
-# )
-
-# file(GLOB_RECURSE VILIB_SOURCES
-# ${VILIB_PATH}/src/*.cpp
-# ${VILIB_PATH}/src/common/*.cpp
-# ${VILIB_PATH}/src/storage/*.cpp
-# ${VILIB_PATH}/src/preprocess/*.cpp
-# ${VILIB_PATH}/src/preprocess/*.cu
-# ${VILIB_PATH}/src/feature_tracker/*.cpp
-# ${VILIB_PATH}/src/feature_tracker/*.cu
-# ${VILIB_PATH}/src/feature_detection/*.cpp
-# ${VILIB_PATH}/src/feature_detection/*.cu
-# )
-
-# cuda_add_library(vilib SHARED ${VILIB_SOURCES})
-
-# set_target_properties(vilib PROPERTIES CUDA_ARCHITECTURES "52;62")
-
-# target_link_libraries(vilib
-# opencv_core
-# opencv_imgproc
-# opencv_highgui
-# opencv_features2d
-# Eigen3::Eigen
-# ${CUDA_LIBRARIES}
-# )
-
-# target_compile_options(vilib PRIVATE
-# $<$<COMPILE_LANGUAGE:CXX>:${cxx_options}>
-# $<$<COMPILE_LANGUAGE:CUDA>:${nvcc_options}>
-# )
-
-add_executable(${PROJECT_NAME}
-  src/vilib_ros.cpp
-  src/vilib_params.cpp
+set(VILIB_NVCC_FLAGS
+  ${VILIB_ARCH_FLAGS}
+  -std=c++11
+  -O3
+  -DNDEBUG
+  --device-w
+  --ftz=true
+  --prec-div=false
+  --prec-sqrt=false
+  --fmad=true
+  --default-stream per-thread
 )
 
-
-
-
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
+# Sources
+file(GLOB_RECURSE VILIB_SOURCES
+  ${VILIB_PATH}/src/*.cpp
+  ${VILIB_PATH}/src/common/*.cpp
+  ${VILIB_PATH}/src/storage/*.cpp
+  ${VILIB_PATH}/src/preprocess/*.cpp
+  ${VILIB_PATH}/src/preprocess/*.cu
+  ${VILIB_PATH}/src/feature_tracker/*.cpp
+  ${VILIB_PATH}/src/feature_tracker/*.cu
+  ${VILIB_PATH}/src/feature_detection/*.cpp
+  ${VILIB_PATH}/src/feature_detection/*.cu
 )
 
-# set_target_properties(${PROJECT_NAME}
-#   PROPERTIES
-#   OUTPUT_NAME ${PROJECT_NAME}
-#   PREFIX ""
-# )
+# Add Library
+cuda_add_library(${PROJECT_NAME} SHARED ${VILIB_SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  ${VILIB_PATH}/include
+  ${EIGEN3_INCLUDE_DIRS}
+  ${CUDA_TOOLKIT_INCLUDE}
+)
 
+set_target_properties(${PROJECT_NAME}
+  PROPERTIES
+  CUDA_ARCHITECTURES "52;62"
+)
+target_link_libraries(${PROJECT_NAME}
+  opencv_core
+  opencv_imgproc
+  opencv_highgui
+  opencv_features2d
+  Eigen3::Eigen
+  ${CUDA_LIBRARIES}
+)
 target_compile_options(${PROJECT_NAME} PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${VILIB_CXX_FLAGS}>
+  $<$<COMPILE_LANGUAGE:CUDA>:${VILIB_NVCC_FLAGS}>
 )
 
-# target_link_libraries(vilib_tracker vilib ${catkin_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)

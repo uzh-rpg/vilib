@@ -30,8 +30,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(vilib_msgs VERSION 1.0.0)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple()
+find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 
-cs_install()
-cs_export()
+add_message_files(FILES
+  Feature.msg
+  Features.msg
+)
+
+generate_messages(DEPENDENCIES std_msgs)
+catkin_package(CATKIN_DEPENDS message_runtime std_msgs)

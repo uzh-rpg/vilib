@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>vilib_tracker</name>
+  <name>vilib_catkin</name>
   <version>1.0.0</version>
-  <description>Fast CUDA Feature Tracker</description>
+  <description>vilib ROS wrapper</description>
 
   <maintainer email="foehn@ifi.uzh.ch">foehnph</maintainer>
 
@@ -40,9 +40,4 @@
   -->
 
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>vilib_msgs</depend>
-  <depend>vilib_catkin</depend>
-  <depend>cv_bridge</depend>
-  <depend>image_transport</depend>
-  <depend>roscpp</depend>
 </package>

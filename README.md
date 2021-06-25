@@ -2,7 +2,7 @@
 
 This repository holds some GPU optimized algorithms by the "Robotics and Perception Group" at the Dep. of Informatics, "University of Zurich", and Dep. of Neuroinformatics, ETH and University of Zurich.
 
-> ***Now available as a simple [ROS Node](#ROS Quick Start)!*** 
+> ***Now available as a simple [ROS Node](#ROS-Quick-Start)!*** 
 
 <a href="https://youtu.be/5Ndi9IYpI68" target="_blank"><img src="./assets/publication.png" 
 width="900" height="480" border="10" /></a>
@@ -23,7 +23,7 @@ Balazs Nagy, Philipp Foehn, and Davide Scaramuzza: **Faster than FAST: GPU-Accel
 }
 ```
 
-## ROS Quick Start
+##ROS Quick Start
 
 Our front-end is now available as a simple ROS Node based on our library, OpenCV, and CUDA!
 
@@ -55,12 +55,12 @@ If you don't have the dependencies yet:
 * Install a version of ROS according to their official website [here](http://www.ros.org/install/).
 * CUDA:
   * CUDA on Jetson/Xavier: install using the [nVidia SDK manager](https://developer.nvidia.com/nvidia-sdk-manager)
-  * CUDA for Desktops/Laptops: follow the [instructions below](#Getting started on a CUDA-enabled desktop computer) or on the [nVidia Documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
+  * CUDA for Desktops/Laptops: follow the [instructions below](#Getting-started-on-a-CUDA-enabled-desktop-computer) or on the [nVidia Documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
 * OpenCV
   * OpenCV with ROS: make sure you have the following ROS packages `cv_bridge, image_transport, sensor_msgs`
   * OpenCV on the Jetson: The latest Jetson SDKs install with the [nVidia SDK manager](https://developer.nvidia.com/nvidia-sdk-manager) should provide OpenCV.
     However, it might be necessary to create a symlink by `sudo ln -s /usr/local/opencv-4.3 /usr/local/opencv`
-  * Alternatively you can follow the [instruction below](#OpenCV (mandatory))
+  * Alternatively you can follow the [instruction below](#OpenCV-(mandatory))
 * Eigen
   * Install using your package manager, e.g. `sudo apt-get install libeigen3-dev`
 

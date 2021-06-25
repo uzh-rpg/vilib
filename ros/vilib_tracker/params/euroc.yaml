@@ -1,0 +1,74 @@
+# Copyright (c) 2019-2021 Philipp Foehn,
+# Robotics and Perception Group, University of Zurich
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+image_width:    752
+image_height:   480
+
+# For the moment, only one camera is supported
+n_cameras: 1
+
+# Print tracking stats and timings:
+# log_stats < 0:  print on close (default)
+# log_stats = 0:  disabled
+# log_stats > 0:  print every nth frame
+log_stats: -1
+
+feature_tracker:
+  reset_before_detection:                 false
+  use_best_n_features:                    64
+  min_tracks_to_detect_new_features:      60
+  affine_est_gain:                        false
+  affine_est_offset:                      false
+
+feature_detector:
+  cell_width:         32
+  cell_height:        32
+  min_level:          0
+  max_level:          2
+  horizontal_border:  8
+  vertical_border:    8
+  
+  harris:
+    # available border types: [skip, zero, replicate, reflect, wrap, reflect_101]
+    border_type:     "skip"
+    harris_k:         0.04
+    quality_level:    0.1
+  
+  # shitomasi:
+  #   # available border types: [skip, zero, replicate, reflect, wrap, reflect_101]
+  #   border_type:     "skip"
+  #   quality_level:    0.1
+
+  # fast:
+  #   epsilon:          10.0
+  #   arc_length:       10
+  #   # available score types: [ sum_of_abs_diff_all, sum_of_abs_diff_on_arc, max_threshold]
+  #   score:            "sum_of_abs_diff_on_arc"
+

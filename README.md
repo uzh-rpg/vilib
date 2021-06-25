@@ -60,7 +60,7 @@ If you don't have the dependencies yet:
   * OpenCV with ROS: make sure you have the following ROS packages `cv_bridge, image_transport, sensor_msgs`
   * OpenCV on the Jetson: The latest Jetson SDKs install with the [nVidia SDK manager](https://developer.nvidia.com/nvidia-sdk-manager) should provide OpenCV.
     However, it might be necessary to create a symlink by `sudo ln -s /usr/local/opencv-4.3 /usr/local/opencv`
-  * Alternatively you can follow the [instruction below](#OpenCV-(mandatory))
+  * Alternatively you can follow the [instruction below](#OpenCV-mandatory)
 * Eigen
   * Install using your package manager, e.g. `sudo apt-get install libeigen3-dev`
 

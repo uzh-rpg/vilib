@@ -23,7 +23,7 @@ Balazs Nagy, Philipp Foehn, and Davide Scaramuzza: **Faster than FAST: GPU-Accel
 }
 ```
 
-##ROS Quick Start
+## ROS Quick Start
 
 Our front-end is now available as a simple ROS Node based on our library, OpenCV, and CUDA!
 

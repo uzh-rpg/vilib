@@ -76,7 +76,8 @@ bool VilibParams::load(const ros::NodeHandle &pnh) {
 
   pnh.getParam("n_cameras", n_cameras);
   pnh.getParam("log_stats", log_stats);
-  pnh.getParam("publish_debug_image", publish_debug_image);
+  if (pnh.hasParam("publish_debug_image"))
+    pnh.getParam("publish_debug_image", publish_debug_image);
 
   // Feature Tracker
   pnh.getParam("feature_tracker/reset_before_detection",

@@ -33,8 +33,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 <launch>
 
+<arg name="publish_debug_image" default="false"/>
+
 <node name="vilib_tracker" pkg="vilib_tracker" type="vilib_tracker" output="screen">
   <rosparam file="$(find vilib_tracker)/params/euroc.yaml"/>
+  <param name="publish_debug_image" value="$(arg publish_debug_image)"/>
   <remap from="vilib_tracker/image" to="/cam0/image_raw"/>
 </node>
 

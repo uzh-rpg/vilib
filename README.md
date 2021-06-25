@@ -2,6 +2,8 @@
 
 This repository holds some GPU optimized algorithms by the "Robotics and Perception Group" at the Dep. of Informatics, "University of Zurich", and Dep. of Neuroinformatics, ETH and University of Zurich.
 
+> ***Now available as a simple [ROS Node](#ROS Quick Start)!*** 
+
 <a href="https://youtu.be/5Ndi9IYpI68" target="_blank"><img src="./assets/publication.png" 
 width="900" height="480" border="10" /></a>
 
@@ -16,9 +18,52 @@ Balazs Nagy, Philipp Foehn, and Davide Scaramuzza: **Faster than FAST: GPU-Accel
   author = {Nagy, Balazs and Foehn, Philipp and Scaramuzza, Davide},
   title = {{Faster than FAST}: {GPU}-Accelerated Frontend for High-Speed {VIO}},
   booktitle = {IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS)},
-  year = {2020}
+  year = {2020},
+  doi = {10.1109/IROS45743.2020.9340851}
 }
 ```
+
+## ROS Quick Start
+
+Our front-end is now available as a simple ROS Node based on our library, OpenCV, and CUDA!
+
+**Quick Start** in your catkin workspace using a EuRoC dataset:
+
+```bash
+git clone git@github.com:uzh-rpg/vilib.git
+catkin build vilib_tracker
+
+# Get one of the EuRoC datasets, or download it manually.
+wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_01_easy/MH_01_easy.bag
+
+# Launch the node with the example EuRoC config.
+roslaunch vilib_tracker euroc.launch
+
+# In a separate terminal, start to play the bag.
+rosbag play MH_01_easy.bag
+
+# If you want to visualize the feature tracks on the image, use this launch argument:
+roslaunch vilib_tracker euroc.launch publish_debug_image:=true
+
+# and then inspect the image using
+rqt_image_view
+
+# Note: visualizing images has a large negative impact on runtime performance!
+```
+
+If you don't have the dependencies yet:
+* Install a version of ROS according to their official website [here](http://www.ros.org/install/).
+* CUDA:
+  * CUDA on Jetson/Xavier: install using the [nVidia SDK manager](https://developer.nvidia.com/nvidia-sdk-manager)
+  * CUDA for Desktops/Laptops: follow the [instructions below](#Getting started on a CUDA-enabled desktop computer) or on the [nVidia Documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)
+* OpenCV
+  * OpenCV with ROS: make sure you have the following ROS packages `cv_bridge, image_transport, sensor_msgs`
+  * OpenCV on the Jetson: The latest Jetson SDKs install with the [nVidia SDK manager](https://developer.nvidia.com/nvidia-sdk-manager) should provide OpenCV.
+    However, it might be necessary to create a symlink by `sudo ln -s /usr/local/opencv-4.3 /usr/local/opencv`
+  * Alternatively you can follow the [instruction below](#OpenCV (mandatory))
+* Eigen
+  * Install using your package manager, e.g. `sudo apt-get install libeigen3-dev`
+
 
 ## Organization
 
@@ -311,9 +356,10 @@ sudo ln -s /usr/local/opencv-4.3 /usr/local/opencv
 
 More information about the library is available [here](https://opencv.org/).
 
-### ROS (Robot Operating System) (optional)
+### Optional ROS Type support
 
-ROS support was made optional [by default it is not required]. However, if you want to include some specific functionalities, install a version of ROS according to your distribution. Follow the instructions on their official website [here](http://www.ros.org/install/).
+ROS `cv_bridge` type support was made optional, but is built by default if compiling the ROS wrapper in a catkin environment.
+However, if you want to include some specific functionalities for `cv_bridge` type conversion in your own ROS packages, enable it with:
 
 ```sh
 # 1) Either accomodate the Makefile:
